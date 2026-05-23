@@ -24,7 +24,7 @@ Seluruh command berikut dijalankan di dalam terminal WSL2. Jangan lupa nyalakan 
 git clone https://github.com/orizynpx/commitin.git && cd commitin
 ```
 
-2. **Instal dependencies via Docker PHP 8.5:**
+2. **Instal dependencies via Docker PHP 8.4:**
 
 ```bash
 docker run --rm \
