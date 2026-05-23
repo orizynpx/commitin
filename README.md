@@ -47,14 +47,25 @@ cp .env.example .env
 ./vendor/bin/sail up -d
 ```
 
-5. **Generate key & jalankan migrasi:**
+5. **Buat symbolic link untuk local storage:**
+
+```bash
+./vendor/bin/sail artisan storage:link
+```
+
+6. **Generate key untuk local environment:**
 
 ```bash
 ./vendor/bin/sail artisan key:generate
+```
+
+7. **Jalankan migration:**
+
+```bash
 ./vendor/bin/sail artisan migrate --seed
 ```
 
-6. **Kompilasi aset frontend (Tailwind & Alpine.js):**
+8. **Kompilasi aset frontend (Tailwind & Alpine.js):**
 
 ```bash
 ./vendor/bin/sail npm install
