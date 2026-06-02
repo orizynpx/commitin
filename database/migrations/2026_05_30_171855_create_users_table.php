@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('email', 100);
             $table->string("password", 50);
             $table->enum('role', ['sysadmin', 'user']);
+            $table->boolean('is_verified');
             $table->timestamps();
         });
     }
