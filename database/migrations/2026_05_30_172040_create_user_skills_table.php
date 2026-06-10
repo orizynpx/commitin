@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('user_skills', function (Blueprint $table) {
             $table->foreignUuid('user_id')->constrained('users', 'user_id')->onDelete('cascade');
             $table->foreignUuid('skill_id')->constrained('skills', 'skill_id')->onDelete('cascade');
-            $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
-            $table->foreign('skill_id')->references('skill_id')->on('skills')->onDelete('cascade');
+            $table->primary(['user_id', 'skill_id']);
             //$table->timestamps();
         });
     }
