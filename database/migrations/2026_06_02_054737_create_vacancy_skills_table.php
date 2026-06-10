@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vacancy_skills', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->foreignUuid('vacancy_id')->constrained('vacancies', 'vacancy_id')->onDelete('cascade');
+            $table->foreignUuid('skill_id')->constrained('skills', 'skill_id')->onDelete('cascade');
+            $table->primary(['vacancy_id', 'skill_id']);
+            // $table->timestamps();
         });
     }
 
