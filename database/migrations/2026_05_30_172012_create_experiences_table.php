@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('experiences', function (Blueprint $table) {
             $table->uuid('experience_id')->primary();
             $table->foreignUuid('user_id')->constrained('users', 'user_id')->onDelete('cascade');
+            $table->string('title', 100);
+            $table->text('description');
             $table->timestamps();
         });
     }
