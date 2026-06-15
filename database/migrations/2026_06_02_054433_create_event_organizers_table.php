@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('event_organizers', function (Blueprint $table) {
-            $table->foreignUuid('event_id')->constrained('events', 'event_id')->onDelete('cascade');
-            $table->foreignUuid('user_id')->constrained('users', 'user_id')->onDelete('cascade');
+            $table->foreignUlid('event_id')->constrained('events', 'event_id')->onDelete('cascade');
+            $table->foreignUlid('user_id')->constrained('users', 'user_id')->onDelete('cascade');
             $table->primary(['event_id', 'user_id']);
             $table->string('organizer_role', 20);
-            // $table->timestamps();
+            $table->timestamps();
         });
     }
 
