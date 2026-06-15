@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('applications', function (Blueprint $table) {
-            $table->uuid('application_id')->primary();
-            $table->foreignUuid('user_id')->constrained('users', 'user_id')->onDelete('cascade');
-            $table->foreignUuid('vacancy_id')->constrained('vacancies', 'vacancy_id')->onDelete('cascade');
+        Schema::create('vacancy_applications', function (Blueprint $table) {
+            $table->ulid('vacancy_application_id')->primary();
+            $table->foreignUlid('user_id')->constrained('users', 'user_id')->onDelete('cascade');
+            $table->foreignUlid('vacancy_id')->constrained('vacancies', 'vacancy_id')->onDelete('cascade');
             $table->enum('status', ['pending', 'accepted', 'rejected']);
             $table->string('file_url', 2083);
             $table->timestamps();
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('applications');
+        Schema::dropIfExists('vacancy_applications');
     }
 };
