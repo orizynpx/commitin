@@ -22,26 +22,24 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
-            'name' => 'Budi Santoso',
-            'student_id' => 'STUDENT01',
-            'email' => 'budi@example.com',
+            'name' => 'HMTI',
+            'email' => 'HMTI@example.com',
             'password' => 'password',
-            'role' => 'user',
+            'role' => 'organization',
             'is_verified' => true,
         ]);
 
         User::create([
-            'name' => 'Siti Rahma',
-            'student_id' => 'STUDENT02',
-            'email' => 'siti@example.com',
-            'password' => 'password',
+            'name' => 'Wasaka Games',
+            'email' => 'WG@example.com',
+            'password' => 'organization',
             'role' => 'user',
             'is_verified' => true,
         ]);
 
         User::create([
             'name' => 'Bumawati',
-            'student_id' => 'STUDENT03',
+            'student_id' => 'STUDENT01',
             'email' => 'buma@example.com',
             'password' => 'password',
             'role' => 'user',
@@ -49,16 +47,15 @@ class UserSeeder extends Seeder
         ]);
         User::create([
             'name' => 'Andi',
-            'student_id' => 'STUDENT04',
+            'student_id' => 'STUDENT02',
             'email' => 'Andi@example.com',
             'password' => 'password',
             'role' => 'user',
             'is_verified' => false,
         ]);
         User::create([
-            'name' => 'Rahmadi',
-            'student_id' => 'STUDENT05',
-            'email' => 'Rahmadi@example.com',
+            'name' => 'Wasaka Robotic',
+            'email' => 'Robotic@example.com',
             'password' => 'password',
             'role' => 'user',
             'is_verified' => true,
