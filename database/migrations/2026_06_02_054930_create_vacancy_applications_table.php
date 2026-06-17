@@ -15,7 +15,7 @@ return new class extends Migration
             $table->ulid('vacancy_application_id')->primary();
             $table->foreignUlid('user_id')->constrained('users', 'user_id')->onDelete('cascade');
             $table->foreignUlid('vacancy_id')->constrained('vacancies', 'vacancy_id')->onDelete('cascade');
-            $table->enum('status', ['pending', 'accepted', 'rejected']);
+            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
             $table->string('file_url', 2083);
             $table->timestamps();
         });

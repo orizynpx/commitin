@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignUlid('event_id')->constrained('events', 'event_id')->onDelete('cascade');
             $table->string('division', 50);
             $table->text('vacancy_description');
-            $table->enum('status', ['OPEN', 'CLOSED']);
+            $table->enum('status', ['OPEN', 'CLOSED'])->default('OPEN');
             $table->timestamps();
         });
     }

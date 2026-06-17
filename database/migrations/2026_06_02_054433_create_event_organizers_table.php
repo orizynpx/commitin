@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignUlid('event_id')->constrained('events', 'event_id')->onDelete('cascade');
             $table->foreignUlid('user_id')->constrained('users', 'user_id')->onDelete('cascade');
             $table->primary(['event_id', 'user_id']);
-            $table->enum('organizer_role', ['creator', 'owner', 'manager']);
+            $table->enum('organizer_role', ['creator', 'owner', 'manager'])->default('creator');
             $table->timestamps();
         });
     }
