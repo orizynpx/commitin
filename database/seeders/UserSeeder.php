@@ -14,10 +14,9 @@ class UserSeeder extends Seeder
     {
         User::create([
             'name' => 'System Admin',
-            'student_id' => 'ADMIN001',
             'email' => 'admin@example.com',
             'password' => 'password',
-            'role' => 'sysadmin',
+            'role' => 'dmin',
             'is_verified' => true,
         ]);
 
