@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Event;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,6 +13,23 @@ class EventSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+       Event::insert([
+        [
+            'event_name' => 'PKKMB 2028',
+            'description' => 'Kegiatan penyambutan mahasiswa baru.',
+            'event_date' => '2028-08-01',
+            'is_official' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'event_name' => 'Wasaka Games 2028',
+            'description' => 'Kompetisi game antar mahasiswa.',
+            'event_date' => '2028-06-15',
+            'is_official' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    ]);
     }
 }
