@@ -7,6 +7,9 @@ Route::middleware('guest')->group(function () {
     Route::livewire('register', 'pages::auth.register')
         ->name('register');
 
+    Route::livewire('register-organization', 'pages::auth.register-organization')
+        ->name('register.organization');
+
     Route::livewire('login', 'pages::auth.login')
         ->name('login');
 

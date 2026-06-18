@@ -15,10 +15,8 @@ new #[Layout('layouts.guest')] class extends Component
     public string $password = '';
     public string $password_confirmation = '';
     
-    // Student Profile fields
-    public string $student_id = '';
-    public string $faculty = '';
-    public string $study_program = '';
+    // Organization Profile fields
+    public string $organization_level = 'study_program';
 
     /**
      * Handle an incoming registration request.
@@ -29,9 +27,7 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-            'student_id' => ['required', 'string', 'max:15', 'unique:student_profile,student_id'],
-            'faculty' => ['required', 'string', 'max:100'],
-            'study_program' => ['required', 'string', 'max:100'],
+            'organization_level' => ['required', 'string', 'in:study_program,faculty,university'],
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -41,14 +37,13 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => $validated['password'],
-            'role' => 'student',
+            'role' => 'organization',
         ]);
 
-        // Create student profile
-        $user->studentProfile()->create([
-            'student_id' => $validated['student_id'],
-            'faculty' => $validated['faculty'],
-            'study_program' => $validated['study_program'],
+        // Create organization profile
+        $user->organizationProfile()->create([
+            'organization_level' => $validated['organization_level'],
+            'verification_status' => 'pending',
         ]);
 
         event(new Registered($user));
@@ -62,10 +57,10 @@ new #[Layout('layouts.guest')] class extends Component
 <div>
     <!-- Registration Type Tabs -->
     <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-        <a href="{{ route('register') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400" wire:navigate>
+        <a href="{{ route('register') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" wire:navigate>
             {{ __('Student Account') }}
         </a>
-        <a href="{{ route('register.organization') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" wire:navigate>
+        <a href="{{ route('register.organization') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400" wire:navigate>
             {{ __('Organization Account') }}
         </a>
     </div>
@@ -73,37 +68,27 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="register">
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" :value="__('Organization Name')" />
             <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
         <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
+            <x-input-label for="email" :value="__('Organization Email')" />
             <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <!-- Student ID -->
+        <!-- Organization Level -->
         <div class="mt-4">
-            <x-input-label for="student_id" :value="__('Student ID / NIM')" />
-            <x-text-input wire:model="student_id" id="student_id" class="block mt-1 w-full" type="text" name="student_id" required />
-            <x-input-error :messages="$errors->get('student_id')" class="mt-2" />
-        </div>
-
-        <!-- Faculty -->
-        <div class="mt-4">
-            <x-input-label for="faculty" :value="__('Faculty')" />
-            <x-text-input wire:model="faculty" id="faculty" class="block mt-1 w-full" type="text" name="faculty" required />
-            <x-input-error :messages="$errors->get('faculty')" class="mt-2" />
-        </div>
-
-        <!-- Study Program -->
-        <div class="mt-4">
-            <x-input-label for="study_program" :value="__('Study Program')" />
-            <x-text-input wire:model="study_program" id="study_program" class="block mt-1 w-full" type="text" name="study_program" required />
-            <x-input-error :messages="$errors->get('study_program')" class="mt-2" />
+            <x-input-label for="organization_level" :value="__('Organization Level')" />
+            <select wire:model="organization_level" id="organization_level" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" name="organization_level" required>
+                <option value="study_program">{{ __('Study Program Level') }}</option>
+                <option value="faculty">{{ __('Faculty Level') }}</option>
+                <option value="university">{{ __('University Level') }}</option>
+            </select>
+            <x-input-error :messages="$errors->get('organization_level')" class="mt-2" />
         </div>
 
         <!-- Password -->
