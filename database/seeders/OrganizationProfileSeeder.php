@@ -18,7 +18,7 @@ class OrganizationProfileSeeder extends Seeder
         $wg = User::query()->where('email', 'wg@example.com')->first();
         $robotic = User::query()->where('email', 'robotic@example.com')->first();
 
-        OrganizationProfile::insert([
+        OrganizationProfile::create([
             [
                 'user_id' => $hmti->user_id,
                 'organization_level' => 'study_program',

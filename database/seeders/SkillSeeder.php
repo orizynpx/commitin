@@ -13,7 +13,7 @@ class SkillSeeder extends Seeder
      */
     public function run(): void
     {
-        Skill::insert([
+        Skill::create([
             ['skill_name' => 'Leadership'],
             ['skill_name' => 'Public Speaking'],
             ['skill_name' => 'Graphic Design'],

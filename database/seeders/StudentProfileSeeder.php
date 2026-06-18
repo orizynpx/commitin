@@ -17,7 +17,7 @@ class StudentProfileSeeder extends Seeder
         $bumawati = User::query()->where('email', 'buma@example.com')->first();
         $andi = User::query()->where('email', 'andi@example.com')->first();
 
-        StudentProfile::insert([
+        StudentProfile::create([
             [
                 'user_id' => $bumawati->user_id,
                 'student_id' => 'STUDENT01',

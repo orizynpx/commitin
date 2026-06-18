@@ -17,7 +17,7 @@ class VacancySeeder extends Seeder
         $pkkmb = Event::query()->where('event_name', 'PKKMB 2028')->first();
         $wg = Event::query()->where('event_name', 'Wasaka Games 2028')->first();
 
-        Vacancy::insert([
+        Vacancy::create([
             [
                 'event_id' => $pkkmb->event_id,
                 'division' => 'Acara',

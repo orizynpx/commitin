@@ -13,7 +13,7 @@ class EventSeeder extends Seeder
      */
     public function run(): void
     {
-       Event::insert([
+       Event::create([
         [
             'event_name' => 'PKKMB 2028',
             'description' => 'Kegiatan penyambutan mahasiswa baru.',

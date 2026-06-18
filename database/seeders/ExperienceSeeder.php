@@ -17,7 +17,7 @@ class ExperienceSeeder extends Seeder
         $bumawati = User::query()->where('email', 'buma@example.com')->first();
         $andi = User::query()->where('email', 'andi@example.com')->first();
 
-        Experience::insert([
+        Experience::create([
             [
                 'user_id' => $bumawati->user_id,
                 'title' => 'Ketua HIMA TI 2028',
