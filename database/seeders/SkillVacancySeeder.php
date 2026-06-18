@@ -15,7 +15,7 @@ class SkillVacancySeeder extends Seeder
      */
     public function run(): void
     {
-         $acara = Vacancy::query()->where('division', 'Acara')->first();
+        $acara = Vacancy::query()->where('division', 'Acara')->first();
         $publikasi = Vacancy::query()->where('division', 'Publikasi')->first();
 
         $leadership = Skill::query()->where('skill_name', 'Leadership')->first();
