@@ -14,14 +14,35 @@ class SkillSeeder extends Seeder
     public function run(): void
     {
         Skill::create([
-            ['skill_name' => 'Leadership'],
-            ['skill_name' => 'Public Speaking'],
-            ['skill_name' => 'Graphic Design'],
-            ['skill_name' => 'Photography'],
-            ['skill_name' => 'Videography'],
-            ['skill_name' => 'UI/UX Design'],
-            ['skill_name' => 'Copywriting'],
-            ['skill_name' => 'Project Management'],
+            'skill_name' => 'Leadership',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Public Speaking',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Graphic Design',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Photography',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Videography',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'UI/UX Design',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Copywriting',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Project Management',
         ]);
     }
 }
