@@ -76,7 +76,16 @@
                 <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=2563eb&color=fff" alt="User avatar" class="w-9 h-9 rounded-full">
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p>
-                    <a href="/profile" class="text-xs text-blue-500 hover:text-blue-700 font-medium truncate block">{{ __('Lihat Profil') }} &rarr;</a>
+                    <div class="flex items-center gap-1.5 text-xs">
+                        <a href="/profile" class="text-blue-500 hover:text-blue-700 font-medium truncate">{{ __('Lihat Profil') }}</a>
+                        <span class="text-gray-300">&bull;</span>
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                            @csrf
+                            <button type="submit" class="text-red-500 hover:text-red-700 font-medium">
+                                {{ __('Keluar') }}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
