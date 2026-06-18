@@ -67,6 +67,16 @@
                 <span class="font-medium text-sm">Manage Vacancies</span>
             </a>
             @endif
+
+            @if (auth()->check() && auth()->user()->role === 'admin')
+                <div class="pt-4 pb-2 px-3">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ __('Menu Admin') }}</p>
+                </div>
+                <a href="{{ route('admin.skills') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('admin.skills') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}" wire:navigate>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M6 20h12a2 2 0 002-2V9a2 2 0 00-2-2h-1.172a2 2 0 01-1.414-.586l-.828-.828A2 2 0 0013.172 5H10.83a2 2 0 00-1.414.586l-.828.828A2 2 0 017.172 7H6a2 2 0 00-2 2v9a2 2 0 002 2z"></path></svg>
+                    <span class="font-medium text-sm">Moderasi Keahlian</span>
+                </a>
+            @endif
             
         </nav>
 

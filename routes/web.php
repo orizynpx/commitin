@@ -12,28 +12,15 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('profile', 'pages::profile')->name('profile');
 });
 
-// Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Modul 7: Moderasi Keahlian (Skill Tagging - Approve/Reject/Delete Tag)
+    Route::livewire('skills', 'pages::admin.skills')->name('skills');
 
-//     // Inline middleware sederhana untuk membatasi akses hanya untuk role 'sysadmin'
-//     Route::middleware(function ($request, $next) {
-//         if (auth()->user()->role !== 'admin') {
-//             abort(403, 'Anda tidak memiliki hak akses ke halaman ini.');
-//         }
-//         return $next($request);
-//     })->group(function () {
+    // Dasbor Statistik Admin & Tindakan Pemblokiran Akun
+    // Route::get('dashboard', \App\Livewire\Pages\Admin\Dashboard::class)->name('dashboard');
 
-//         // Dasbor Statistik Admin & Tindakan Pemblokiran Akun
-//         Route::get('/dashboard', \App\Livewire\Pages\Admin\Dashboard::class)
-//             ->name('dashboard');
-
-//         // Modul 7: Moderasi Keahlian (Skill Tagging - Approve/Reject/Delete Tag)
-//         Route::get('/skills', \App\Livewire\Pages\Admin\ManageSkills::class)
-//             ->name('skills');
-
-//         // Modul 1: Verifikasi Akun Organisasi Mahasiswa (Ormawa)
-//         Route::get('/verifications', \App\Livewire\Pages\Admin\ManageVerifications::class)
-//             ->name('verifications');
-//     });
-// });
+    // Modul 1: Verifikasi Akun Organisasi Mahasiswa (Ormawa)
+    // Route::get('verifications', \App\Livewire\Pages\Admin\ManageVerifications::class)->name('verifications');
+});
 
 require __DIR__.'/auth.php';
