@@ -7,12 +7,12 @@ Route::get('/', function () {
 });
 
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::view('profile', 'profile')->name('profile');
 });
 
-// Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+// Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 
 //     // Inline middleware sederhana untuk membatasi akses hanya untuk role 'sysadmin'
 //     Route::middleware(function ($request, $next) {
