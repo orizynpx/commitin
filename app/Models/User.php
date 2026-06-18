@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -31,5 +34,38 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function studentProfile(): HasOne
+    {
+        return $this->hasOne(StudentProfile::class, 'user_id', 'user_id');
+    }
+
+    public function organizationProfile(): HasOne
+    {
+        return $this->hasOne(OrganizationProfile::class, 'user_id', 'user_id');
+    }
+
+    public function experiences(): HasMany
+    {
+        return $this->hasMany(Experience::class, 'user_id', 'user_id');
+    }
+
+    public function skills(): BelongsToMany
+    {
+        return $this->belongsToMany(Skill::class, 'skill_user', 'user_id', 'skill_id')
+                    ->withTimestamps();
+    }
+
+    public function applications(): HasMany
+    {
+        return $this->hasMany(VacancyApplication::class, 'user_id', 'user_id');
+    }
+
+    public function events(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_organizers', 'user_id', 'event_id')
+                    ->withPivot('organizer_role')
+                    ->withTimestamps();
     }
 }
