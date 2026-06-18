@@ -18,27 +18,21 @@ class ExperienceSeeder extends Seeder
         $andi = User::query()->where('email', 'andi@example.com')->first();
 
         Experience::create([
-            [
-                'user_id' => $bumawati->user_id,
-                'title' => 'Ketua HIMA TI 2028',
-                'description' => 'Memimpin organisasi mahasiswa selama satu periode.',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $bumawati->user_id,
-                'title' => 'Koordinator PKKMB',
-                'description' => 'Mengkoordinasikan pelaksanaan PKKMB tingkat fakultas.',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $andi->user_id,
-                'title' => 'Staff Acara Wasaka Games',
-                'description' => 'Bertanggung jawab terhadap pelaksanaan lomba.',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            'user_id' => $bumawati->user_id,
+            'title' => 'Ketua HIMA TI 2028',
+            'description' => 'Memimpin organisasi mahasiswa selama satu periode.',
+        ]);
+
+        Experience::create([
+            'user_id' => $bumawati->user_id,
+            'title' => 'Koordinator PKKMB',
+            'description' => 'Mengkoordinasikan pelaksanaan PKKMB tingkat fakultas.',
+        ]);
+
+        Experience::create([
+            'user_id' => $andi->user_id,
+            'title' => 'Staff Acara Wasaka Games',
+            'description' => 'Bertanggung jawab terhadap pelaksanaan lomba.',
         ]);
     }
 }

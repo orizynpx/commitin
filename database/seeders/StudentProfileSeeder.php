@@ -28,6 +28,8 @@ class StudentProfileSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+        ]);
+        StudentProfile::create([
             [
                 'user_id' => $andi->user_id,
                 'student_id' => 'STUDENT02',

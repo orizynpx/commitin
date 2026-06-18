@@ -28,6 +28,10 @@ class OrganizationProfileSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
+
+        ]);
+        OrganizationProfile::create([
             [
                 'user_id' => $wg->user_id,
                 'organization_level' => 'faculty',
@@ -37,6 +41,8 @@ class OrganizationProfileSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+        ]);
+        OrganizationProfile::create([
             [
                 'user_id' => $robotic->user_id,
                 'organization_level' => 'university',
