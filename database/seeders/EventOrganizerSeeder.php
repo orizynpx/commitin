@@ -7,6 +7,7 @@ use App\Models\EventOrganizer;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Facades\DB;
 
 class EventOrganizerSeeder extends Seeder
 {
@@ -21,7 +22,7 @@ class EventOrganizerSeeder extends Seeder
         $hmti = User::query()->where('email', 'hmti@example.com')->first();
         $wg = User::query()->where('email', 'wg@example.com')->first();
 
-        EventOrganizer::insert([
+        DB::table('event_organizers')->insert([
             [
                 'event_id' => $pkkmb->event_id,
                 'user_id' => $hmti->user_id,
