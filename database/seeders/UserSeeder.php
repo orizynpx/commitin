@@ -15,9 +15,9 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'System Admin',
             'email' => 'admin@example.com',
-            'password' => 'password',
-            'role' => 'dmin',
-            'is_verified' => true,
+            'password' => 'admin123',
+            'role' => 'admin',
+            'email_verified_at' => now(),
         ]);
 
         User::create([
@@ -25,39 +25,39 @@ class UserSeeder extends Seeder
             'email' => 'HMTI@example.com',
             'password' => 'password',
             'role' => 'organization',
-            'is_verified' => true,
+            'email_verified_at' => now(),
         ]);
 
         User::create([
             'name' => 'Wasaka Games',
             'email' => 'WG@example.com',
-            'password' => 'organization',
-            'role' => 'user',
-            'is_verified' => true,
+            'password' => 'password',
+            'role' => 'organization',
+            'email_verified_at' => now(),
         ]);
 
         User::create([
             'name' => 'Bumawati',
-            'student_id' => 'STUDENT01',
             'email' => 'buma@example.com',
             'password' => 'password',
-            'role' => 'user',
-            'is_verified' => false,
+            'role' => 'student',
+            'email_verified_at' => now(),
         ]);
+
         User::create([
             'name' => 'Andi',
-            'student_id' => 'STUDENT02',
             'email' => 'Andi@example.com',
             'password' => 'password',
-            'role' => 'user',
-            'is_verified' => false,
+            'role' => 'student',
+            'email_verified_at' => now(),
         ]);
+
         User::create([
             'name' => 'Wasaka Robotic',
             'email' => 'Robotic@example.com',
             'password' => 'password',
-            'role' => 'user',
-            'is_verified' => true,
+            'role' => 'organization',
+            'email_verified_at' => now(),
         ]);
     }
 }
