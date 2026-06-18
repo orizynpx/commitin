@@ -18,7 +18,6 @@ class StudentProfileSeeder extends Seeder
         $andi = User::query()->where('email', 'andi@example.com')->first();
 
         StudentProfile::create([
-            [
                 'user_id' => $bumawati->user_id,
                 'student_id' => 'STUDENT01',
                 'faculty' => 'Teknik',
@@ -27,7 +26,6 @@ class StudentProfileSeeder extends Seeder
                 'bio' => 'Aktif dalam organisasi dan kepanitiaan.',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
         ]);
         StudentProfile::create([
                 'user_id' => $andi->user_id,
