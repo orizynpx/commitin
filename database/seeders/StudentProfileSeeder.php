@@ -30,7 +30,6 @@ class StudentProfileSeeder extends Seeder
             ],
         ]);
         StudentProfile::create([
-            [
                 'user_id' => $andi->user_id,
                 'student_id' => 'STUDENT02',
                 'faculty' => 'Teknik',
@@ -39,7 +38,6 @@ class StudentProfileSeeder extends Seeder
                 'bio' => 'Tertarik pada manajemen acara.',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
         ]);
     }
 }

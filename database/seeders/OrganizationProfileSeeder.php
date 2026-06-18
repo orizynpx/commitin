@@ -19,7 +19,6 @@ class OrganizationProfileSeeder extends Seeder
         $robotic = User::query()->where('email', 'robotic@example.com')->first();
 
         OrganizationProfile::create([
-            [
                 'user_id' => $hmti->user_id,
                 'organization_level' => 'study_program',
                 'description' => 'Himpunan Mahasiswa Teknik Informatika.',
@@ -27,12 +26,8 @@ class OrganizationProfileSeeder extends Seeder
                 'verified_at' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-
-
         ]);
         OrganizationProfile::create([
-            [
                 'user_id' => $wg->user_id,
                 'organization_level' => 'faculty',
                 'description' => 'Komunitas penyelenggara kompetisi game.',
@@ -40,10 +35,8 @@ class OrganizationProfileSeeder extends Seeder
                 'verified_at' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
         ]);
         OrganizationProfile::create([
-            [
                 'user_id' => $robotic->user_id,
                 'organization_level' => 'university',
                 'description' => 'Komunitas robotika universitas.',
@@ -51,7 +44,6 @@ class OrganizationProfileSeeder extends Seeder
                 'verified_at' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
         ]);
     }
 }
