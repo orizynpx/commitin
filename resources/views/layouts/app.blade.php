@@ -73,10 +73,10 @@
         <!-- User Profile Area at Bottom -->
         <div class="p-4 border-t border-gray-100">
             <div class="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=Admin+User&background=2563eb&color=fff" alt="User avatar" class="w-9 h-9 rounded-full">
+                <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=2563eb&color=fff" alt="User avatar" class="w-9 h-9 rounded-full">
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">Budi Mahasiswa</p>
-                    <a href="/profile" class="text-xs text-blue-500 hover:text-blue-700 font-medium truncate block">View Profile &rarr;</a>
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p>
+                    <a href="/profile" class="text-xs text-blue-500 hover:text-blue-700 font-medium truncate block">{{ __('Lihat Profil') }} &rarr;</a>
                 </div>
             </div>
         </div>
