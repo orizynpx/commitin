@@ -236,21 +236,26 @@ Based on the actual codebase files, here is the current state of implementation:
   - [EventOrganizer.php](file:///home/orizyn/web_ii_project/commitin/app/Models/EventOrganizer.php) (extends Eloquent `Pivot`)
   - [Vacancy.php](file:///home/orizyn/web_ii_project/commitin/app/Models/Vacancy.php)
   - [VacancyApplication.php](file:///home/orizyn/web_ii_project/commitin/app/Models/VacancyApplication.php)
-- **Model Relationships (Fully Defined)**:
-  - [User.php](file:///home/orizyn/web_ii_project/commitin/app/Models/User.php) links to `studentProfile()` (HasOne), `organizationProfile()` (HasOne), `experiences()` (HasMany), `skills()` (BelongsToMany), `applications()` (HasMany), and `events()` (BelongsToMany).
-  - [Event.php](file:///home/orizyn/web_ii_project/commitin/app/Models/Event.php) links to `organizers()` (BelongsToMany) and `vacancies()` (HasMany).
-  - [Vacancy.php](file:///home/orizyn/web_ii_project/commitin/app/Models/Vacancy.php) links to `event()` (BelongsTo), `skills()` (BelongsToMany), and `applications()` (HasMany).
-  - [VacancyApplication.php](file:///home/orizyn/web_ii_project/commitin/app/Models/VacancyApplication.php) links to `user()` (BelongsTo) and `vacancy()` (BelongsTo).
-  - [Skill.php](file:///home/orizyn/web_ii_project/commitin/app/Models/Skill.php) links to `users()` (BelongsToMany) and `vacancies()` (BelongsToMany).
-  - [Experience.php](file:///home/orizyn/web_ii_project/commitin/app/Models/Experience.php) links to `user()` (BelongsTo).
-  - [StudentProfile.php](file:///home/orizyn/web_ii_project/commitin/app/Models/StudentProfile.php) and [OrganizationProfile.php](file:///home/orizyn/web_ii_project/commitin/app/Models/OrganizationProfile.php) both define a `user()` (BelongsTo) back-relation.
-- **Authentication & Registration Subsystem**:
-  - Livewire Volt components exist for student registration ([⚡register.blade.php](file:///home/orizyn/web_ii_project/commitin/resources/views/pages/auth/⚡register.blade.php)) and organization registration ([⚡register-organization.blade.php](file:///home/orizyn/web_ii_project/commitin/resources/views/pages/auth/⚡register-organization.blade.php)).
-  - Routes in `routes/auth.php` mapped to Livewire guest pages: `register`, `register.organization`, `login`, `password.request`, `password.reset`.
-  - Landing page redirects directly to `/dashboard`, with authentication active (email verification requirement removed from the core route group).
+- **Model Relationships (Partially Defined)**:
+  - `Event.php` links to `organizers()` (BelongsToMany) and `vacancies()` (HasMany).
+  - `Vacancy.php` links to `event()` (BelongsTo), `skills()` (BelongsToMany), and `applications()` (HasMany).
+  - `VacancyApplication.php` links to `user()` (BelongsTo) and `vacancy()` (BelongsTo).
+  - `Skill.php` links to `users()` (BelongsToMany) and `vacancies()` (BelongsToMany).
+  - `Experience.php` links to `user()` (BelongsTo).
 
 ### B. In-Progress or Stubbed Code
 - **Mock Vacancies Endpoint**:
   - [VacancyController.php](file:///home/orizyn/web_ii_project/commitin/app/Http/Controllers/VacancyController.php) serves hardcoded mock JSON results for `index()`.
 - **Skeleton Admin Routes**:
-  - Outlined and currently commented out in [web.php](file:///home/orizyn/web_ii_project/commitin/routes/web.php#L15-L37), pointing to Livewire Page classes under `\App\Livewire\Pages\Admin\...` which have not yet been generated in the workspace.
+  - Outlined and currently commented out in [web.php](file:///home/orizyn/web_ii_project/commitin/routes/web.php#L12-L34), pointing to Livewire Page classes under `\App\Livewire\Pages\Admin\...` which have not yet been generated in the workspace.
+
+### C. Missing Model Associations (Next Tasks)
+- [User.php](file:///home/orizyn/web_ii_project/commitin/app/Models/User.php) needs:
+  - `studentProfile()` (HasOne)
+  - `organizationProfile()` (HasOne)
+  - `experiences()` (HasMany)
+  - `skills()` (BelongsToMany)
+  - `applications()` (HasMany)
+  - `events()` (BelongsToMany via `event_organizers`)
+- [StudentProfile.php](file:///home/orizyn/web_ii_project/commitin/app/Models/StudentProfile.php) and [OrganizationProfile.php](file:///home/orizyn/web_ii_project/commitin/app/Models/OrganizationProfile.php) need:
+  - `user()` (BelongsTo) back-relation.
