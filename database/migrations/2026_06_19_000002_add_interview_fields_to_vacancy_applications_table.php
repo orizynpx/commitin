@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('vacancy_applications', function (Blueprint $table) {
             $table->timestamp('interview_scheduled_at')->nullable()->after('file_url');
-            $table->string('interview_format')->nullable()->after('interview_scheduled_at'); // e.g., online, offline
+            $table->enum('interview_format', ['online', 'offline'])->nullable()->after('interview_scheduled_at');
             $table->string('interview_location', 2083)->nullable()->after('interview_format'); // zoom/meet link or room location
             $table->text('feedback')->nullable()->after('interview_location'); // interviewer notes / rejection reasons
         });

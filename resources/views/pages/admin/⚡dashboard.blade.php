@@ -100,12 +100,6 @@ new #[Layout('layouts.app')] class extends Component
             <li><strong>{{ __('Ditolak (Rejected): ') }}</strong>{{ VacancyApplication::where('status', 'rejected')->count() }}</li>
         </ul>
 
-        <h3>{{ __('Keahlian Paling Banyak Dibutuhkan (Top 5 Required Skills)') }}</h3>
-        <ol>
-            @foreach (Skill::withCount('vacancies')->orderByDesc('vacancies_count')->take(5)->get() as $sk)
-                <li>{{ $sk->skill_name }} (Dibutuhkan di {{ $sk->vacancies_count }} lowongan)</li>
-            @endforeach
-        </ol>
     </div>
 
     <hr />
