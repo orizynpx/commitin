@@ -13,9 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'vacancy_id',
     'status',
     'file_url',
-    'interview_link',
     'interview_scheduled_at',
-    'interview_notes',
+    'interview_format',
+    'interview_location',
+    'feedback',
 ])]
 class VacancyApplication extends Model
 {
