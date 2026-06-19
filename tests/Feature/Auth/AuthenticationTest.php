@@ -62,9 +62,7 @@ class AuthenticationTest extends TestCase
 
         $response = $this->get('/dashboard');
 
-        $response
-            ->assertOk()
-            ->assertSeeLivewire('layout.navigation');
+        $response->assertOk();
     }
 
     public function test_users_can_logout(): void
@@ -73,13 +71,9 @@ class AuthenticationTest extends TestCase
 
         $this->actingAs($user);
 
-        $component = Livewire::test('layout.navigation');
+        $response = $this->post('/logout');
 
-        $component->call('logout');
-
-        $component
-            ->assertHasNoErrors()
-            ->assertRedirect('/');
+        $response->assertRedirect('/');
 
         $this->assertGuest();
     }

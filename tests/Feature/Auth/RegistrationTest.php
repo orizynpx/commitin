@@ -24,6 +24,9 @@ class RegistrationTest extends TestCase
         $component = Livewire::test('pages::auth.register')
             ->set('name', 'Test User')
             ->set('email', 'test@example.com')
+            ->set('student_id', '1234567890')
+            ->set('faculty', 'Faculty of Engineering')
+            ->set('study_program', 'Computer Engineering')
             ->set('password', 'password')
             ->set('password_confirmation', 'password');
 
