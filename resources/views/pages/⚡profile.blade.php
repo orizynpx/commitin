@@ -97,13 +97,18 @@ new #[Layout('layouts.app')] class extends Component
             $user->update(['name' => $validated['name']]);
             $this->name = $user->name;
 
+            $profile = $user->organizationProfile;
+            $newStatus = ($profile && $profile->verification_status === 'rejected') ? 'pending' : ($profile->verification_status ?? 'pending');
+
             $user->organizationProfile()->updateOrCreate(
                 ['user_id' => $user->user_id],
                 [
                     'organization_level' => $validated['organization_level'],
                     'description' => $validated['description'],
+                    'verification_status' => $newStatus,
                 ]
             );
+            $this->verification_status = $newStatus;
         }
 
         $this->dispatch('close-modal', 'edit-profile');
