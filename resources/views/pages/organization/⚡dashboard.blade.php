@@ -27,13 +27,28 @@ new #[Layout('layouts.app')] class extends Component
         $totalApplicantsCount = (clone $applicationsQuery)->count();
 
         // 3. Interview scheduled count
-        $scheduledInterviewsCount = $applicationsQuery->where('status', 'interviewing')->count();
+        $scheduledInterviewsCount = (clone $applicationsQuery)->where('status', 'interviewing')->count();
+
+        // 4. Accepted count and acceptance rate
+        $acceptedCount = (clone $applicationsQuery)->where('status', 'accepted')->count();
+        $acceptanceRate = $totalApplicantsCount > 0 ? round(($acceptedCount / $totalApplicantsCount) * 100, 1) : 0;
+
+        // 5. Rank divisions by application count
+        $divisionRanking = Vacancy::whereHas('event.organizers', function ($q) use ($orgId) {
+            $q->where('event_organizers.user_id', $orgId);
+        })
+        ->with(['event'])
+        ->withCount('applications')
+        ->orderByDesc('applications_count')
+        ->get();
 
         return view('pages.organization.⚡dashboard', [
             'activeVacanciesCount' => $activeVacanciesCount,
             'activeVacancies' => $activeVacancies,
             'totalApplicantsCount' => $totalApplicantsCount,
             'scheduledInterviewsCount' => $scheduledInterviewsCount,
+            'acceptanceRate' => $acceptanceRate,
+            'divisionRanking' => $divisionRanking,
         ]);
     }
 }; ?>
@@ -42,7 +57,7 @@ new #[Layout('layouts.app')] class extends Component
     @php
         $user = auth()->user();
         $profile = $user->organizationProfile;
-        $status = $profile->verification_status ?? 'pending';
+        $status = $user->role === 'organization' ? ($profile->verification_status ?? 'pending') : 'verified';
     @endphp
 
     @if ($status === 'pending')
@@ -148,15 +163,33 @@ new #[Layout('layouts.app')] class extends Component
             </div>
         </div>
 
+        <!-- Acceptance Rate and Division Ranking (Unstyled Analytics) -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Analisis Rekrutmen & Penerimaan</h3>
+            <p class="text-sm text-gray-600 mb-4">Rasio Penerimaan Panitia: <strong>{{ $acceptanceRate }}%</strong></p>
+            
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Peringkat Kebutuhan Divisi (Berdasarkan Jumlah Pelamar):</h4>
+            <ul style="list-style-type: decimal; margin-left: 20px;" class="text-sm text-gray-600 space-y-1">
+                @forelse($divisionRanking as $ranked)
+                    <li>
+                        <strong>{{ $ranked->division }}</strong> (Event: {{ $ranked->event->event_name }}) - 
+                        {{ $ranked->applications_count }} pelamar
+                    </li>
+                @empty
+                    <li class="text-gray-400 italic">Belum ada data peringkat lowongan.</li>
+                @endforelse
+            </ul>
+        </div>
+
         <!-- Active Vacancies Section -->
         <div>
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-gray-900">Daftar Lowongan Aktif</h3>
                 <div class="flex gap-2">
-                    <a href="{{ route('organization.events.index') }}" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-1 shadow-sm">
+                    <a href="{{ route('organizer.events.index') }}" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-1 shadow-sm">
                         Kelola Event
                     </a>
-                    <a href="{{ route('organization.events.create') }}" class="bg-[#0f172a] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-black transition-colors flex items-center gap-2 shadow-sm">
+                    <a href="{{ route('organizer.events.create') }}" class="bg-[#0f172a] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-black transition-colors flex items-center gap-2 shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         Buat Event Baru
                     </a>
@@ -179,10 +212,10 @@ new #[Layout('layouts.app')] class extends Component
                                     Pendaftar: <strong>{{ $vacancy->applications->count() }} orang</strong>
                                 </span>
                                 <div class="space-x-2">
-                                    <a href="{{ route('organization.vacancies.edit', $vacancy->vacancy_id) }}" class="text-blue-600 hover:underline font-semibold">
+                                    <a href="{{ route('organizer.vacancies.edit', $vacancy->vacancy_id) }}" class="text-blue-600 hover:underline font-semibold">
                                         Edit
                                     </a>
-                                    <a href="{{ route('organization.vacancies.applications', $vacancy->vacancy_id) }}" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100 transition-colors">
+                                    <a href="{{ route('organizer.vacancies.applications', $vacancy->vacancy_id) }}" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100 transition-colors">
                                         Kelola Pelamar
                                     </a>
                                 </div>
@@ -195,8 +228,8 @@ new #[Layout('layouts.app')] class extends Component
                     <div class="max-w-md mx-auto">
                         <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0V9a2 2 0 00-2-2H6a2 2 0 00-2 2v2m0 4h12"></path></svg>
                         <h4 class="text-lg font-bold text-gray-900 mb-1">Belum Ada Lowongan</h4>
-                        <p class="text-gray-500 text-sm mb-6">Organisasi Anda belum menerbitkan lowongan kepanitiaan aktif saat ini.</p>
-                        <a href="{{ route('organization.events.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm inline-block">
+                        <p class="text-gray-500 text-sm mb-6">Penyelenggara belum menerbitkan lowongan kepanitiaan aktif saat ini.</p>
+                        <a href="{{ route('organizer.events.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm inline-block">
                             Buat Lowongan Sekarang
                         </a>
                     </div>

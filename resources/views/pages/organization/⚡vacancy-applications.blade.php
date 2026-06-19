@@ -31,7 +31,7 @@ new #[Layout('layouts.app')] class extends Component
 
 <div class="max-w-6xl mx-auto py-8">
     <div class="mb-6">
-        <a href="{{ route('organization.dashboard') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
+        <a href="{{ route('organizer.dashboard') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
             &larr; Kembali ke Dashboard
         </a>
     </div>
@@ -76,7 +76,7 @@ new #[Layout('layouts.app')] class extends Component
                         </td>
                         <td class="px-6 py-4 text-right">
                             <a 
-                                href="{{ route('organization.applications.show', $app->vacancy_application_id) }}" 
+                                href="{{ route('organizer.applications.show', $app->vacancy_application_id) }}" 
                                 class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-lg shadow-sm"
                             >
                                 Kelola Lamaran

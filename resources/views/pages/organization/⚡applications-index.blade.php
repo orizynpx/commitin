@@ -64,7 +64,7 @@ new #[Layout('layouts.app')] class extends Component
                         </td>
                         <td class="px-6 py-4 text-right">
                             <a 
-                                href="{{ route('organization.applications.show', $app->vacancy_application_id) }}" 
+                                href="{{ route('organizer.applications.show', $app->vacancy_application_id) }}" 
                                 class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-lg"
                             >
                                 Kelola Lamaran

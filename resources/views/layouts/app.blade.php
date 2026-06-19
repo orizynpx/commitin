@@ -53,6 +53,21 @@
             @if (auth()->check())
                 @if (auth()->user()->role === 'student')
                     <!-- Student Navigation -->
+                    <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        {{ __('Dasbor') }}
+                    </div>
+                    <a href="{{ route('student.dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('student.dashboard') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        <span class="font-medium text-sm">{{ __('Dashboard Pelamar') }}</span>
+                    </a>
+                    <a href="{{ route('organizer.dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('organizer.dashboard') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        <span class="font-medium text-sm">{{ __('Dashboard Penyelenggara') }}</span>
+                    </a>
+
+                    <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        {{ __('Menu') }}
+                    </div>
                     <!-- Cari Lowongan -->
                     <a href="{{ route('vacancies.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('vacancies.index') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -74,13 +89,13 @@
                 @elseif (auth()->user()->role === 'organization')
                     <!-- Organization Navigation -->
                     <!-- Dashboard Event -->
-                    <a href="{{ route('organization.dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('organization.dashboard') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                    <a href="{{ route('organizer.dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('organizer.dashboard') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                        <span class="font-medium text-sm">{{ __('Dashboard Event') }}</span>
+                        <span class="font-medium text-sm">{{ __('Dashboard Penyelenggara') }}</span>
                     </a>
 
                     <!-- Buat Event -->
-                    <a href="{{ route('organization.events.create') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('organization.events.create') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                    <a href="{{ route('organizer.events.create') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('organizer.events.create') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <span class="font-medium text-sm">{{ __('Buat Event') }}</span>
                     </a>

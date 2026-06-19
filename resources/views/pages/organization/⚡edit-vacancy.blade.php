@@ -47,13 +47,13 @@ new #[Layout('layouts.app')] class extends Component
         });
 
         session()->flash('success', 'Lowongan divisi berhasil diperbarui.');
-        return redirect()->route('organization.dashboard');
+        return redirect()->route('organizer.dashboard');
     }
 }; ?>
 
 <div class="max-w-2xl mx-auto py-8">
     <div class="mb-6">
-        <a href="{{ route('organization.dashboard') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
+        <a href="{{ route('organizer.dashboard') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
             &larr; Kembali ke Dashboard
         </a>
     </div>
@@ -127,7 +127,7 @@ new #[Layout('layouts.app')] class extends Component
 
             <div class="pt-4 border-t border-gray-50 flex justify-end gap-3">
                 <a 
-                    href="{{ route('organization.dashboard') }}" 
+                    href="{{ route('organizer.dashboard') }}" 
                     class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
                 >
                     Batal

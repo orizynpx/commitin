@@ -66,7 +66,7 @@ new #[Layout('layouts.app')] class extends Component
 
 <div class="max-w-5xl mx-auto py-8">
     <div class="mb-6">
-        <a href="{{ route('organization.applications.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
+        <a href="{{ route('organizer.applications.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
             &larr; Kembali ke Daftar Pelamar
         </a>
     </div>
