@@ -32,10 +32,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::livewire('skills', 'pages::admin.skills')->name('skills');
 
     // Dasbor Statistik Admin & Tindakan Pemblokiran Akun
-    // Route::livewire('dashboard', 'pages::admin.dashboard')->name('dashboard');
+    Route::livewire('dashboard', 'pages::admin.dashboard')->name('dashboard');
 
     // Modul 1: Verifikasi Akun Organisasi Mahasiswa (Ormawa)
-    // Route::livewire('verifications', 'pages::admin.verifications')->name('verifications');
+    Route::livewire('verifications', 'pages::admin.verifications')->name('verifications');
 });
 
 require __DIR__.'/auth.php';
