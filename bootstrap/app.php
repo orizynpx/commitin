@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => CheckRole::class,
             'verified_org' => CheckVerifiedOrganization::class,
         ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckBlocked::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
