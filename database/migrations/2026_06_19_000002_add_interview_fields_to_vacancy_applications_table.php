@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('vacancy_applications', function (Blueprint $table) {
+            $table->enum('status', ['pending', 'interviewing', 'accepted', 'rejected'])->default('pending')->change();
             $table->timestamp('interview_scheduled_at')->nullable()->after('file_url');
             $table->enum('interview_format', ['online', 'offline'])->nullable()->after('interview_scheduled_at');
             $table->string('interview_location', 2083)->nullable()->after('interview_format'); // zoom/meet link or room location
@@ -25,6 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('vacancy_applications', function (Blueprint $table) {
+            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending')->change();
             $table->dropColumn([
                 'interview_scheduled_at',
                 'interview_format',
