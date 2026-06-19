@@ -4,10 +4,10 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::livewire('register', 'pages::auth.register')
+    Route::livewire('register/student', 'pages::auth.register')
         ->name('register');
 
-    Route::livewire('register-organization', 'pages::auth.register-organization')
+    Route::livewire('register/organization', 'pages::auth.register-organization')
         ->name('register.organization');
 
     Route::livewire('login', 'pages::auth.login')
