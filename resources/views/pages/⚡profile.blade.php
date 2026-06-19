@@ -37,6 +37,10 @@ new #[Layout('layouts.app')] class extends Component
     public function mount(): void
     {
         $user = Auth::user();
+        if ($user->role === 'admin') {
+            abort(403, 'Administrator tidak memiliki halaman profil.');
+        }
+
         $this->role = $user->role;
         $this->name = $user->name;
         $this->email = $user->email;
