@@ -9,6 +9,13 @@ new #[Layout('layouts.app')] class extends Component
     public function deleteEvent(string $eventId)
     {
         $event = auth()->user()->events()->findOrFail($eventId);
+        
+        $myPivot = $event->organizers()->where('users.user_id', auth()->id())->first()?->pivot;
+        if (!$myPivot || !in_array($myPivot->organizer_role, ['creator', 'owner'])) {
+            session()->flash('error', 'Hanya pembuat (creator) atau pemilik (owner) yang dapat menghapus event ini.');
+            return;
+        }
+
         $event->delete();
         session()->flash('success', 'Event berhasil dihapus.');
     }
@@ -33,7 +40,7 @@ new #[Layout('layouts.app')] class extends Component
             <p class="text-gray-600">{{ __('Daftar kegiatan organisasi Anda beserta lowongan divisi yang dibuka.') }}</p>
         </div>
         <a 
-            href="{{ route('organization.events.create') }}" 
+            href="{{ route('organizer.events.create') }}" 
             class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors shadow-sm"
         >
             Buat Event Baru
@@ -43,6 +50,12 @@ new #[Layout('layouts.app')] class extends Component
     @if(session()->has('success'))
         <div class="bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 mb-6 text-sm">
             {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session()->has('error'))
+        <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 mb-6 text-sm">
+            {{ session('error') }}
         </div>
     @endif
 
@@ -78,13 +91,13 @@ new #[Layout('layouts.app')] class extends Component
                         </td>
                         <td class="px-6 py-4 text-right space-x-2">
                             <a 
-                                href="{{ route('organization.events.vacancies.create', $event->event_id) }}" 
+                                href="{{ route('organizer.events.vacancies.create', $event->event_id) }}" 
                                 class="text-xs bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 px-3 py-1.5 rounded-lg font-semibold"
                             >
                                 + Buka Lowongan
                             </a>
                             <a 
-                                href="{{ route('organization.events.edit', $event->event_id) }}" 
+                                href="{{ route('organizer.events.edit', $event->event_id) }}" 
                                 class="text-xs text-blue-600 hover:underline font-semibold"
                             >
                                 Edit

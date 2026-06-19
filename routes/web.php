@@ -14,7 +14,7 @@ Route::middleware(['auth'])->group(function () {
         if ($role === 'student') {
             return redirect()->route('student.dashboard');
         } elseif ($role === 'organization') {
-            return redirect()->route('organization.dashboard');
+            return redirect()->route('organizer.dashboard');
         } elseif ($role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
@@ -42,8 +42,8 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::livewire('dashboard', 'pages::student.dashboard')->name('dashboard');
 });
 
-// Organization Route Group (Dashboard accessible to all orgs, features restricted to verified orgs)
-Route::middleware(['auth', 'role:organization'])->prefix('organization')->name('organization.')->group(function () {
+// Organizer Route Group (Dashboard accessible to all orgs/students, features restricted to verified orgs)
+Route::middleware(['auth', 'role:student,organization'])->prefix('organizer')->name('organizer.')->group(function () {
     Route::livewire('dashboard', 'pages::organization.dashboard')->name('dashboard');
 
     // Events and vacancies RESTful paths requiring verification
@@ -58,7 +58,7 @@ Route::middleware(['auth', 'role:organization'])->prefix('organization')->name('
         Route::livewire('vacancies/{vacancy}/edit', 'pages::organization.edit-vacancy')->name('vacancies.edit');
 
         // Collaborators / Event Team
-        Route::livewire('events/{event}/team', 'pages::organization.team');
+        Route::livewire('events/{event}/team', 'pages::organization.team')->name('events.team');
 
         // Recruitment Desk / Candidate Applications
         Route::livewire('applications', 'pages::organization.applications-index')->name('applications.index');

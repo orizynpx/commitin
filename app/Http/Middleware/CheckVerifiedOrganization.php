@@ -20,19 +20,17 @@ class CheckVerifiedOrganization
         }
 
         $user = auth()->user();
+        
+        if ($user->role === 'organization') {
+            $profile = $user->organizationProfile;
 
-        if ($user->role !== 'organization') {
-            abort(403, 'Hanya akun organisasi yang dapat mengakses halaman ini.');
-        }
-
-        $profile = $user->organizationProfile;
-
-        if (!$profile || $profile->verification_status !== 'verified') {
-            $statusMsg = 'Akun organisasi Anda belum diverifikasi oleh admin.';
-            if ($profile && $profile->verification_status === 'rejected') {
-                $statusMsg = 'Akun organisasi Anda ditolak oleh admin.';
+            if (!$profile || $profile->verification_status !== 'verified') {
+                $statusMsg = 'Akun organisasi Anda belum diverifikasi oleh admin.';
+                if ($profile && $profile->verification_status === 'rejected') {
+                    $statusMsg = 'Akun organisasi Anda ditolak oleh admin.';
+                }
+                return redirect()->route('dashboard')->with('status', $statusMsg);
             }
-            return redirect()->route('dashboard')->with('status', $statusMsg);
         }
 
         return $next($request);

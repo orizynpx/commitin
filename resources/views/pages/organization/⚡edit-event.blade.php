@@ -15,6 +15,12 @@ new #[Layout('layouts.app')] class extends Component
     public function mount(string $event): void
     {
         $this->event = auth()->user()->events()->findOrFail($event);
+        
+        $myPivot = $this->event->organizers()->where('users.user_id', auth()->id())->first()?->pivot;
+        if (!$myPivot || !in_array($myPivot->organizer_role, ['creator', 'owner'])) {
+            abort(403, 'Hanya pembuat (creator) atau pemilik (owner) yang dapat mengedit event ini.');
+        }
+
         $this->event_name = $this->event->event_name;
         $this->description = $this->event->description;
         $this->event_date = $this->event->event_date ? $this->event->event_date->format('Y-m-d') : '';
@@ -38,13 +44,13 @@ new #[Layout('layouts.app')] class extends Component
         ]);
 
         session()->flash('success', 'Event berhasil diperbarui.');
-        return redirect()->route('organization.events.index');
+        return redirect()->route('organizer.events.index');
     }
 }; ?>
 
 <div class="max-w-2xl mx-auto py-8">
     <div class="mb-6">
-        <a href="{{ route('organization.events.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
+        <a href="{{ route('organizer.events.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
             &larr; Kembali ke Daftar Event
         </a>
     </div>
@@ -108,7 +114,7 @@ new #[Layout('layouts.app')] class extends Component
 
             <div class="pt-4 border-t border-gray-50 flex justify-end gap-3">
                 <a 
-                    href="{{ route('organization.events.index') }}" 
+                    href="{{ route('organizer.events.index') }}" 
                     class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
                 >
                     Batal
