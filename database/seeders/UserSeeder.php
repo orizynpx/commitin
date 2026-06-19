@@ -59,5 +59,33 @@ class UserSeeder extends Seeder
             'role' => 'organization',
             'email_verified_at' => now(),
         ]);
+
+        User::create([
+            'name' => 'Blocked Student',
+            'email' => 'blocked_student@example.com',
+            'password' => 'password',
+            'role' => 'student',
+            'email_verified_at' => now(),
+            'blocked_at' => now(),
+            'block_reason' => 'Melanggar syarat dan ketentuan penggunaan platform.',
+        ]);
+
+        User::create([
+            'name' => 'Blocked Organization',
+            'email' => 'blocked_org@example.com',
+            'password' => 'password',
+            'role' => 'organization',
+            'email_verified_at' => now(),
+            'blocked_at' => now(),
+            'block_reason' => 'Melakukan spamming lowongan.',
+        ]);
+
+        User::create([
+            'name' => 'Rejected Organization',
+            'email' => 'rejected_org@example.com',
+            'password' => 'password',
+            'role' => 'organization',
+            'email_verified_at' => now(),
+        ]);
     }
 }
