@@ -26,11 +26,10 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'student_id' => fake()->unique()->numerify('#############'),
             'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
             'password' => Hash::make('password'),
-            'role' => fake()->randomElement(['sysadmin', 'user']),
-            'is_verified' => fake()->boolean(20),
+            'role' => fake()->randomElement(['student', 'organization']),
         ];
     }
 

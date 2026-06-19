@@ -45,5 +45,28 @@ class OrganizationProfileSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
         ]);
+
+        $blocked_org = User::query()->where('email', 'blocked_org@example.com')->first();
+        $rejected_org = User::query()->where('email', 'rejected_org@example.com')->first();
+
+        OrganizationProfile::create([
+                'user_id' => $blocked_org->user_id,
+                'organization_level' => 'faculty',
+                'description' => 'Akun organisasi yang diblokir.',
+                'verification_status' => 'verified',
+                'verified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+        ]);
+
+        OrganizationProfile::create([
+                'user_id' => $rejected_org->user_id,
+                'organization_level' => 'university',
+                'description' => 'Akun organisasi yang ditolak verifikasinya.',
+                'verification_status' => 'rejected',
+                'verified_at' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+        ]);
     }
 }
