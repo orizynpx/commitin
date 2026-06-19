@@ -28,7 +28,11 @@ class CheckVerifiedOrganization
         $profile = $user->organizationProfile;
 
         if (!$profile || $profile->verification_status !== 'verified') {
-            abort(403, 'Akun organisasi Anda belum diverifikasi oleh admin.');
+            $statusMsg = 'Akun organisasi Anda belum diverifikasi oleh admin.';
+            if ($profile && $profile->verification_status === 'rejected') {
+                $statusMsg = 'Akun organisasi Anda ditolak oleh admin.';
+            }
+            return redirect()->route('dashboard')->with('status', $statusMsg);
         }
 
         return $next($request);
