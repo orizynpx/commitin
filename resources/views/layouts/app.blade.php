@@ -110,12 +110,6 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                         <span class="font-medium text-sm">{{ __('Verifikasi Ormawa') }}</span>
                     </a>
-
-                    <!-- Profil Admin -->
-                    <a href="{{ route('profile') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('profile') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                        <span class="font-medium text-sm">{{ __('Profil Admin') }}</span>
-                    </a>
                 @endif
             @endif
         </nav>
@@ -128,8 +122,10 @@
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p>
                         <div class="flex items-center gap-1.5 text-xs">
-                            <a href="/profile" class="text-xs text-blue-500 hover:text-blue-700 font-medium truncate">{{ __('Lihat Profil') }}</a>
-                            <span class="text-gray-300">&bull;</span>
+                            @if (auth()->user()->role !== 'admin')
+                                <a href="/profile" class="text-xs text-blue-500 hover:text-blue-700 font-medium truncate">{{ __('Lihat Profil') }}</a>
+                                <span class="text-gray-300">&bull;</span>
+                            @endif
                             <form method="POST" action="{{ route('logout') }}" class="inline">
                                 @csrf
                                 <button type="submit" class="text-xs text-red-500 hover:text-red-700 font-medium focus:outline-none">
