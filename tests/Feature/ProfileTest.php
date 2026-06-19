@@ -19,9 +19,7 @@ class ProfileTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSeeLivewire('profile.update-profile-information-form')
-            ->assertSeeLivewire('profile.update-password-form')
-            ->assertSeeLivewire('profile.delete-user-form');
+            ->assertSeeLivewire('pages::profile');
     }
 
     public function test_profile_information_can_be_updated(): void
