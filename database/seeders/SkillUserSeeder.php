@@ -16,7 +16,7 @@ class SkillUserSeeder extends Seeder
     public function run(): void
     {
         $bumawati = User::query()->where('email', 'buma@example.com')->first();
-        $andi = User::query()->where('email', 'andi@example.com')->first();
+        $andi = User::query()->where('email', 'Andi@example.com')->first();
 
         $leadership = Skill::query()->where('skill_name', 'Leadership')->first();
         $publicSpeaking = Skill::query()->where('skill_name', 'Public Speaking')->first();

@@ -14,9 +14,9 @@ class OrganizationProfileSeeder extends Seeder
      */
     public function run(): void
     {
-        $hmti = User::query()->where('email', 'hmti@example.com')->first();
-        $wg = User::query()->where('email', 'wg@example.com')->first();
-        $robotic = User::query()->where('email', 'robotic@example.com')->first();
+        $hmti = User::query()->where('email', 'HMTI@example.com')->first();
+        $wg = User::query()->where('email', 'WG@example.com')->first();
+        $robotic = User::query()->where('email', 'Robotic@example.com')->first();
 
         OrganizationProfile::create([
                 'user_id' => $hmti->user_id,

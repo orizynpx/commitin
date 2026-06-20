@@ -15,7 +15,7 @@ class ExperienceSeeder extends Seeder
     public function run(): void
     {
         $bumawati = User::query()->where('email', 'buma@example.com')->first();
-        $andi = User::query()->where('email', 'andi@example.com')->first();
+        $andi = User::query()->where('email', 'Andi@example.com')->first();
 
         Experience::create([
             'user_id' => $bumawati->user_id,
