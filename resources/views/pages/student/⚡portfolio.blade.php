@@ -45,11 +45,19 @@ new #[Layout('layouts.app')] class extends Component
         <div class="px-6 pb-6 relative flex flex-col sm:flex-row sm:items-end justify-between -mt-16 gap-6">
             <div class="flex flex-col sm:flex-row items-center sm:items-end gap-4 text-center sm:text-left">
                 <!-- Avatar overlapping the cover photo -->
-                <img 
-                    src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=3b82f6&color=fff&size=128&bold=true" 
-                    alt="{{ $user->name }}" 
-                    class="w-32 h-32 rounded-full border-4 border-white shadow-md bg-white object-cover"
-                />
+                @if($user->avatar_url)
+                    <img 
+                        src="{{ $user->avatar_url }}" 
+                        alt="{{ $user->name }}" 
+                        class="w-32 h-32 rounded-full border-4 border-white shadow-md bg-white object-cover"
+                    />
+                @else
+                    <img 
+                        src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=3b82f6&color=fff&size=128&bold=true" 
+                        alt="{{ $user->name }}" 
+                        class="w-32 h-32 rounded-full border-4 border-white shadow-md bg-white object-cover"
+                    />
+                @endif
                 
                 <div class="mb-2">
                     <div class="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
