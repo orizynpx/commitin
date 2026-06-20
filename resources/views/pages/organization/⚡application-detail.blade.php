@@ -134,7 +134,7 @@ new #[Layout('layouts.app')] class extends Component
                         @forelse($application->user->experiences as $exp)
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 text-xs">
                                 <div class="font-bold text-gray-900 mb-0.5">{{ $exp->title }}</div>
-                                <div class="text-gray-450 mb-2">Diperbarui {{ $exp->updated_at->format('d M Y') }}</div>
+                                <div class="text-gray-400 mb-2">Diperbarui {{ $exp->updated_at->format('d M Y') }}</div>
                                 <p class="text-gray-600 leading-normal">{{ $exp->description }}</p>
                             </div>
                         @empty
