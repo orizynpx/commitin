@@ -36,76 +36,76 @@ new #[Layout('layouts.app')] class extends Component
 <div class="max-w-6xl mx-auto py-8">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ __('Kelola Event Organisasi') }}</h1>
-            <p class="text-gray-600">{{ __('Daftar kegiatan organisasi Anda beserta lowongan divisi yang dibuka.') }}</p>
+            <h1 class="text-3xl font-bold text-on-surface mb-2">{{ __('Kelola Event Organisasi') }}</h1>
+            <p class="text-on-surface-variant">{{ __('Daftar kegiatan organisasi Anda beserta lowongan divisi yang dibuka.') }}</p>
         </div>
         <a 
             href="{{ route('organizer.events.create') }}" 
-            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors shadow-sm"
+            class="bg-primary hover:bg-primary-container text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors shadow-sm"
         >
             Buat Event Baru
         </a>
     </div>
 
     @if(session()->has('success'))
-        <div class="bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 mb-6 text-sm">
+        <div class="bg-secondary-container border border-secondary-container text-on-secondary-container rounded-xl p-4 mb-6 text-sm">
             {{ session('success') }}
         </div>
     @endif
 
     @if(session()->has('error'))
-        <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 mb-6 text-sm">
+        <div class="bg-error-container border border-error-container text-on-error-container rounded-xl p-4 mb-6 text-sm">
             {{ session('error') }}
         </div>
     @endif
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim overflow-hidden">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    <th class="px-6 py-4">Nama Event</th>
-                    <th class="px-6 py-4">Tanggal Event</th>
-                    <th class="px-6 py-4">Status / Kategori</th>
-                    <th class="px-6 py-4">Jumlah Lowongan</th>
-                    <th class="px-6 py-4 text-right">Tindakan</th>
+                <tr class="bg-surface-container border-b border-surface-dim text-xs font-bold text-on-surface uppercase tracking-wider">
+                    <th class="px-6 py-4 whitespace-nowrap">Nama Event</th>
+                    <th class="px-6 py-4 whitespace-nowrap">Tanggal Event</th>
+                    <th class="px-6 py-4 whitespace-nowrap">Status / Kategori</th>
+                    <th class="px-6 py-4 whitespace-nowrap">Jumlah Lowongan</th>
+                    <th class="px-6 py-4 text-right whitespace-nowrap">Tindakan</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 text-sm">
+            <tbody class="divide-y divide-surface-dim text-sm">
                 @forelse($events as $event)
                     <tr>
-                        <td class="px-6 py-4 font-semibold text-gray-900">
+                        <td class="px-6 py-4 font-semibold text-on-surface whitespace-nowrap">
                             {{ $event->event_name }}
                         </td>
-                        <td class="px-6 py-4 text-gray-500">
+                        <td class="px-6 py-4 text-outline-variant whitespace-nowrap">
                             {{ $event->event_date?->format('d M Y') ?? '-' }}
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold 
-                                {{ $event->is_official ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-gray-50 text-gray-700 border border-gray-100' }}
+                                {{ $event->is_official ? 'bg-surface-container text-primary border border-primary-fixed-dim' : 'bg-surface-container text-on-surface-variant border border-surface-dim' }}
                             ">
                                 {{ $event->is_official ? 'Resmi Kampus' : 'Umum' }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 font-medium text-gray-700">
+                        <td class="px-6 py-4 font-medium text-on-surface-variant whitespace-nowrap">
                             {{ $event->vacancies_count }} Divisi
                         </td>
-                        <td class="px-6 py-4 text-right space-x-2">
+                        <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
                             <a 
                                 href="{{ route('organizer.events.vacancies.create', $event->event_id) }}" 
-                                class="text-xs bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 px-3 py-1.5 rounded-lg font-semibold"
+                                class="text-xs bg-surface-container text-on-surface-variant border border-surface-dim hover:bg-surface-container px-3 py-1.5 rounded-lg font-semibold"
                             >
                                 + Buka Lowongan
                             </a>
                             <a 
                                 href="{{ route('organizer.events.edit', $event->event_id) }}" 
-                                class="text-xs text-blue-600 hover:underline font-semibold"
+                                class="text-xs text-primary hover:underline font-semibold"
                             >
                                 Edit
                             </a>
                             <button 
                                 wire:click="deleteEvent('{{ $event->event_id }}')" 
                                 wire:confirm="Apakah Anda yakin ingin menghapus event ini beserta semua lowongan di dalamnya?"
-                                class="text-xs text-red-600 hover:underline font-semibold"
+                                class="text-xs text-error hover:underline font-semibold"
                             >
                                 Hapus
                             </button>
@@ -113,10 +113,10 @@ new #[Layout('layouts.app')] class extends Component
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                            <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span class="block mb-1 font-semibold text-gray-900">Belum Ada Event</span>
-                            <span class="text-xs text-gray-400">Mulailah dengan membuat event pertama untuk membuka lowongan kepanitiaan.</span>
+                        <td colspan="5" class="px-6 py-12 text-center text-outline-variant">
+                            <svg class="w-12 h-12 text-outline-variant mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span class="block mb-1 font-semibold text-on-surface">Belum Ada Event</span>
+                            <span class="text-xs text-outline-variant">Mulailah dengan membuat event pertama untuk membuka lowongan kepanitiaan.</span>
                         </td>
                     </tr>
                 @endforelse

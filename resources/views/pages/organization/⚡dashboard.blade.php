@@ -2,239 +2,315 @@
 
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use App\Models\Event;
 use App\Models\Vacancy;
 use App\Models\VacancyApplication;
+use Illuminate\Support\Facades\DB;
 
 new #[Layout('layouts.app')] class extends Component
 {
     public function render()
     {
         $orgId = auth()->id();
+        $user = auth()->user();
+        $profile = clone $user->organizationProfile;
 
-        // 1. Vacancies created by this organization
-        $activeVacanciesQuery = Vacancy::whereHas('event.organizers', function ($q) use ($orgId) {
+        // 1. My Events Pipeline & High-level Metrics
+        $myEvents = Event::whereHas('organizers', function($q) use ($orgId) {
             $q->where('event_organizers.user_id', $orgId);
-        })->where('status', 'OPEN');
+        })->with(['organizers', 'vacancies.applications.user'])->get();
 
-        $activeVacanciesCount = (clone $activeVacanciesQuery)->count();
-        $activeVacancies = $activeVacanciesQuery->with(['event', 'applications'])->get();
+        $totalEvents = $myEvents->count();
+        $totalOpenVacancies = 0;
+        $totalApplications = 0;
+        $appPending = 0;
+        $appInterviewing = 0;
+        $appAccepted = 0;
+        $appRejected = 0;
 
-        // 2. Total applications count
-        $applicationsQuery = VacancyApplication::whereHas('vacancy.event.organizers', function ($q) use ($orgId) {
-            $q->where('event_organizers.user_id', $orgId);
+        $eventList = [];
+        $collaborators = [];
+        $upcomingInterviews = [];
+
+        foreach($myEvents as $event) {
+            $myRole = $event->organizers->firstWhere('user_id', $orgId)->pivot->role ?? 'MEMBER';
+            $eventVacancies = $event->vacancies->where('status', 'OPEN')->count();
+            $totalOpenVacancies += $eventVacancies;
+
+            $eventApplicants = 0;
+            foreach($event->vacancies as $vac) {
+                $eventApplicants += $vac->applications->count();
+                foreach($vac->applications as $app) {
+                    $totalApplications++;
+                    if($app->status === 'pending') $appPending++;
+                    if($app->status === 'interviewing') {
+                        $appInterviewing++;
+                        if($app->interview_scheduled_at && \Carbon\Carbon::parse($app->interview_scheduled_at)->isFuture()) {
+                            $upcomingInterviews[] = [
+                                'candidate' => $app->user->name ?? 'Kandidat',
+                                'division' => $vac->division,
+                                'time' => $app->interview_scheduled_at,
+                                'format' => $app->interview_format,
+                                'location' => $app->interview_location,
+                            ];
+                        }
+                    }
+                    if($app->status === 'accepted') $appAccepted++;
+                    if($app->status === 'rejected') $appRejected++;
+                }
+            }
+
+            $eventList[] = [
+                'id' => $event->event_id,
+                'name' => $event->event_name,
+                'date' => $event->event_date,
+                'is_past' => \Carbon\Carbon::parse($event->event_date)->isPast(),
+                'role' => $myRole,
+                'active_vacancies' => $eventVacancies,
+                'applicants' => $eventApplicants,
+            ];
+
+            foreach($event->organizers as $org) {
+                if($org->user_id !== $orgId) {
+                    $collaborators[$org->user_id] = [
+                        'name' => $org->name,
+                        'email' => $org->email,
+                        'role' => $org->pivot->role,
+                        'event' => $event->event_name
+                    ];
+                }
+            }
+        }
+
+        // Sort upcoming interviews by date
+        usort($upcomingInterviews, function($a, $b) {
+            return strtotime($a['time']) - strtotime($b['time']);
         });
 
-        $totalApplicantsCount = (clone $applicationsQuery)->count();
-
-        // 3. Interview scheduled count
-        $scheduledInterviewsCount = (clone $applicationsQuery)->where('status', 'interviewing')->count();
-
-        // 4. Accepted count and acceptance rate
-        $acceptedCount = (clone $applicationsQuery)->where('status', 'accepted')->count();
-        $acceptanceRate = $totalApplicantsCount > 0 ? round(($acceptedCount / $totalApplicantsCount) * 100, 1) : 0;
-
-        // 5. Rank divisions by application count
-        $divisionRanking = Vacancy::whereHas('event.organizers', function ($q) use ($orgId) {
-            $q->where('event_organizers.user_id', $orgId);
-        })
-        ->with(['event'])
-        ->withCount('applications')
-        ->orderByDesc('applications_count')
-        ->get();
+        // Limit upcoming interviews to show only top 5
+        $upcomingInterviews = array_slice($upcomingInterviews, 0, 5);
 
         return view('pages.organization.⚡dashboard', [
-            'activeVacanciesCount' => $activeVacanciesCount,
-            'activeVacancies' => $activeVacancies,
-            'totalApplicantsCount' => $totalApplicantsCount,
-            'scheduledInterviewsCount' => $scheduledInterviewsCount,
-            'acceptanceRate' => $acceptanceRate,
-            'divisionRanking' => $divisionRanking,
+            'user' => $user,
+            'profile' => $profile,
+            'totalEvents' => $totalEvents,
+            'totalOpenVacancies' => $totalOpenVacancies,
+            'totalApplications' => $totalApplications,
+            'appPending' => $appPending,
+            'appInterviewing' => $appInterviewing,
+            'appAccepted' => $appAccepted,
+            'appRejected' => $appRejected,
+            'eventList' => $eventList,
+            'collaborators' => array_values($collaborators),
+            'upcomingInterviews' => $upcomingInterviews,
         ]);
     }
 }; ?>
 
-<div>
+<div class="space-y-8 py-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ __('Dasbor Penyelenggara') }}</h1>
+            <p class="text-on-surface-variant text-sm mt-1">{{ __('Pantau kegiatan, manajemen kolaborator, dan status perekrutan panitia Anda.') }}</p>
+        </div>
+    </div>
+
     @php
-        $user = auth()->user();
-        $profile = $user->organizationProfile;
-        $status = $user->role === 'organization' ? ($profile->verification_status ?? 'pending') : 'verified';
+        $status = $profile->verification_status ?? 'pending';
     @endphp
 
     @if ($status === 'pending')
-        <!-- PENDING VERIFICATION STATE -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center my-12">
-            <div class="max-w-xl mx-auto">
-                <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Pendaftaran Akun Sedang Ditinjau</h2>
-                <p class="text-gray-600 text-sm leading-relaxed mb-6">
-                    Terima kasih telah mendaftar sebagai organisasi di CommitIn. Akun organisasi <strong>{{ $user->name }}</strong> saat ini sedang ditinjau oleh administrator sistem untuk proses verifikasi.
-                </p>
-                <div class="bg-amber-50 rounded-lg p-4 mb-8 text-left border border-amber-100">
-                    <p class="text-xs text-amber-800 font-medium leading-relaxed">
-                        💡 Selama proses peninjauan ini, Anda dapat melengkapi deskripsi profil organisasi Anda, namun Anda belum diperkenankan menerbitkan kegiatan/event atau membuka lowongan kepanitiaan.
-                    </p>
-                </div>
-                <div class="flex justify-center gap-3">
-                    <a href="{{ route('profile') }}" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                        Lihat Profil Organisasi
-                    </a>
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
-                        @csrf
-                        <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors">
-                            Keluar
-                        </button>
-                    </form>
-                </div>
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-8 text-center my-8">
+            <div class="w-16 h-16 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
+            <h2 class="text-xl font-bold text-on-surface mb-2">Akun Sedang Ditinjau Admin</h2>
+            <p class="text-on-surface-variant text-sm mb-6 max-w-lg mx-auto">Anda belum dapat membuat kegiatan baru sebelum admin memverifikasi profil organisasi Anda.</p>
         </div>
-
     @elseif ($status === 'rejected')
-        <!-- REJECTED VERIFICATION STATE -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center my-12">
-            <div class="max-w-xl mx-auto">
-                <div class="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Verifikasi Akun Ditolak</h2>
-                <p class="text-gray-600 text-sm leading-relaxed mb-6">
-                    Mohon maaf, permohonan verifikasi akun organisasi <strong>{{ $user->name }}</strong> ditolak oleh administrator sistem karena informasi profil atau kelengkapan yang belum memenuhi syarat.
-                </p>
-                <div class="bg-red-50 rounded-lg p-4 mb-8 text-left border border-red-100">
-                    <p class="text-xs text-red-800 font-medium leading-relaxed">
-                        ⚠️ Silakan perbarui deskripsi organisasi, tingkat organisasi, atau informasi lainnya di halaman profil Anda. Setelah Anda memperbarui profil, permohonan Anda akan otomatis dikirimkan kembali untuk ditinjau ulang oleh admin.
-                    </p>
-                </div>
-                <div class="flex justify-center gap-3">
-                    <a href="{{ route('profile') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-200">
-                        Perbarui & Ajukan Ulang Profil
-                    </a>
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
-                        @csrf
-                        <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors">
-                            Keluar
-                        </button>
-                    </form>
-                </div>
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-error-container p-8 text-center my-8">
+            <div class="w-16 h-16 bg-error-container text-error rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
+            <h2 class="text-xl font-bold text-error mb-2">Verifikasi Ditolak</h2>
+            <p class="text-on-surface-variant text-sm mb-6 max-w-lg mx-auto">Harap perbarui profil Anda dengan informasi yang valid, atau hubungi administrator.</p>
         </div>
-
     @else
-        <!-- VERIFIED ORGANIZER DASHBOARD -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold text-[#1e293b] mb-1">Overview Rekrutmen</h2>
-            <p class="text-gray-500 text-sm">Pantau proses seleksi pendaftar dan status lowongan divisi kepanitiaan Anda.</p>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <!-- Card 1 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    </div>
+        <!-- Organization Profile & Trust Snapshot -->
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-2xl font-bold shrink-0">
+                    {{ substr($user->name, 0, 1) }}
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ $activeVacanciesCount }}</h3>
-                <p class="text-gray-500 text-sm">Lowongan Aktif</p>
+                <div>
+                    <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+                        {{ $user->name }}
+                        <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    </h2>
+                    <p class="text-sm text-on-surface-variant mt-1">Tingkat: <span class="font-semibold uppercase">{{ str_replace('_', ' ', $profile->organization_level) }}</span></p>
+                </div>
             </div>
-
-            <!-- Card 2 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-teal-50 rounded-lg text-teal-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    </div>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ $totalApplicantsCount }}</h3>
-                <p class="text-gray-500 text-sm">Total Pelamar</p>
-            </div>
-
-            <!-- Card 3 -->
-            <div class="bg-blue-50 rounded-xl shadow-sm border border-blue-100 p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-blue-600 rounded-lg text-white shadow-md shadow-blue-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    </div>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ $scheduledInterviewsCount }}</h3>
-                <p class="text-gray-600 text-sm">Interview Dijadwalkan</p>
+            <div class="text-left md:text-right">
+                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase bg-surface-container text-primary border border-primary-fixed-dim mb-1">Terverifikasi</span>
+                <p class="text-xs text-outline-variant">Sejak {{ $profile->verified_at ? \Carbon\Carbon::parse($profile->verified_at)->format('d M Y') : 'N/A' }}</p>
             </div>
         </div>
 
-        <!-- Acceptance Rate and Division Ranking (Unstyled Analytics) -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Analisis Rekrutmen & Penerimaan</h3>
-            <p class="text-sm text-gray-600 mb-4">Rasio Penerimaan Panitia: <strong>{{ $acceptanceRate }}%</strong></p>
-            
-            <h4 class="text-sm font-semibold text-gray-700 mb-2">Peringkat Kebutuhan Divisi (Berdasarkan Jumlah Pelamar):</h4>
-            <ul style="list-style-type: decimal; margin-left: 20px;" class="text-sm text-gray-600 space-y-1">
-                @forelse($divisionRanking as $ranked)
-                    <li>
-                        <strong>{{ $ranked->division }}</strong> (Event: {{ $ranked->event->event_name }}) - 
-                        {{ $ranked->applications_count }} pelamar
-                    </li>
-                @empty
-                    <li class="text-gray-400 italic">Belum ada data peringkat lowongan.</li>
-                @endforelse
-            </ul>
+        <!-- High-Level Operational Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
+                <span class="text-xs font-bold text-outline-variant uppercase mb-2 block">Total Kegiatan</span>
+                <strong class="text-3xl font-black text-on-surface">{{ $totalEvents }}</strong>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
+                <span class="text-xs font-bold text-outline-variant uppercase mb-2 block">Lowongan Aktif</span>
+                <strong class="text-3xl font-black text-on-surface">{{ $totalOpenVacancies }}</strong>
+            </div>
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
+                <span class="text-xs font-bold text-outline-variant uppercase mb-2 block">Total Pelamar</span>
+                <strong class="text-3xl font-black text-on-surface">{{ $totalApplications }}</strong>
+            </div>
         </div>
 
-        <!-- Active Vacancies Section -->
-        <div>
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-900">Daftar Lowongan Aktif</h3>
-                <div class="flex gap-2">
-                    <a href="{{ route('organizer.events.index') }}" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-1 shadow-sm">
-                        Kelola Event
-                    </a>
-                    <a href="{{ route('organizer.events.create') }}" class="bg-[#0f172a] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-black transition-colors flex items-center gap-2 shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        Buat Event Baru
-                    </a>
+        <!-- Recruitment Funnel Widget -->
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    Funnel Pelamar Aktif
+                </h3>
+                @if($appPending > 0)
+                    <span class="bg-error text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse shadow-sm">
+                        {{ $appPending }} Pending Action Required!
+                    </span>
+                @endif
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-surface-container p-4 rounded-xl border border-surface-dim text-center relative overflow-hidden">
+                    <span class="text-xs font-semibold text-outline-variant uppercase mb-1 block">Tinjauan Awal (Pending)</span>
+                    <strong class="text-2xl text-on-surface">{{ $appPending }}</strong>
+                </div>
+                <div class="bg-surface-container p-4 rounded-xl border border-surface-dim text-center relative overflow-hidden">
+                    <span class="text-xs font-semibold text-primary uppercase mb-1 block">Wawancara</span>
+                    <strong class="text-2xl text-on-surface">{{ $appInterviewing }}</strong>
+                </div>
+                <div class="bg-surface-container p-4 rounded-xl border border-surface-dim text-center relative overflow-hidden">
+                    <span class="text-xs font-semibold text-on-secondary-container uppercase mb-1 block">Diterima</span>
+                    <strong class="text-2xl text-on-surface">{{ $appAccepted }}</strong>
+                </div>
+                <div class="bg-surface-container p-4 rounded-xl border border-surface-dim text-center relative overflow-hidden">
+                    <span class="text-xs font-semibold text-error uppercase mb-1 block">Ditolak</span>
+                    <strong class="text-2xl text-on-surface">{{ $appRejected }}</strong>
                 </div>
             </div>
-            
-            @if(count($activeVacancies) > 0)
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    @foreach($activeVacancies as $vacancy)
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
-                            <div>
-                                <span class="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1 block">
-                                    {{ $vacancy->event->event_name }}
-                                </span>
-                                <h4 class="text-lg font-bold text-gray-900 mb-2">{{ $vacancy->division }}</h4>
-                                <p class="text-gray-600 text-xs mb-4 line-clamp-2">{{ $vacancy->vacancy_description }}</p>
-                            </div>
-                            <div class="pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
-                                <span>
-                                    Pendaftar: <strong>{{ $vacancy->applications->count() }} orang</strong>
-                                </span>
-                                <div class="space-x-2">
-                                    <a href="{{ route('organizer.vacancies.edit', $vacancy->vacancy_id) }}" class="text-blue-600 hover:underline font-semibold">
-                                        Edit
-                                    </a>
-                                    <a href="{{ route('organizer.vacancies.applications', $vacancy->vacancy_id) }}" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100 transition-colors">
-                                        Kelola Pelamar
-                                    </a>
-                                </div>
-                            </div>
+        </div>
+
+        <!-- Middle Section: Pipeline & Interviews -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- My Events Pipeline -->
+            <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim flex flex-col h-full overflow-hidden">
+                <div class="p-6 border-b border-surface-dim">
+                    <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        Kegiatan Saya (Pipeline)
+                    </h3>
+                </div>
+                <div class="flex-1 overflow-auto">
+                    @if(count($eventList) === 0)
+                        <div class="p-8 text-center text-outline-variant italic text-sm">Belum ada kegiatan yang dikelola.</div>
+                    @else
+                        <div class="divide-y divide-surface-dim">
+                            @foreach($eventList as $ev)
+                                <a href="{{ route('organizer.events.edit', $ev['id']) }}" class="block p-4 hover:bg-surface-container-low transition-colors group">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h4 class="font-bold text-on-surface group-hover:text-primary transition-colors">{{ $ev['name'] }}</h4>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border {{ $ev['is_past'] ? 'bg-surface-container text-outline-variant border-surface-dim' : 'bg-secondary-container text-on-secondary-container border-secondary-container' }}">
+                                            {{ $ev['is_past'] ? 'Selesai' : 'Aktif' }}
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-4 text-xs">
+                                        <span class="text-primary font-semibold uppercase bg-surface-container px-2 py-0.5 rounded">{{ $ev['role'] }}</span>
+                                        <span class="text-outline-variant"><strong class="text-on-surface">{{ $ev['active_vacancies'] }}</strong> Lowongan Buka</span>
+                                        <span class="text-outline-variant"><strong class="text-on-surface">{{ $ev['applicants'] }}</strong> Pelamar</span>
+                                    </div>
+                                </a>
+                            @endforeach
                         </div>
-                    @endforeach
+                    @endif
                 </div>
-            @else
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-                    <div class="max-w-md mx-auto">
-                        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0V9a2 2 0 00-2-2H6a2 2 0 00-2 2v2m0 4h12"></path></svg>
-                        <h4 class="text-lg font-bold text-gray-900 mb-1">Belum Ada Lowongan</h4>
-                        <p class="text-gray-500 text-sm mb-6">Penyelenggara belum menerbitkan lowongan kepanitiaan aktif saat ini.</p>
-                        <a href="{{ route('organizer.events.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm inline-block">
-                            Buat Lowongan Sekarang
-                        </a>
+            </div>
+
+            <!-- Upcoming Interviews & Collaborators -->
+            <div class="flex flex-col gap-6">
+                
+                <!-- Upcoming Scheduled Interviews -->
+                <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim flex flex-col h-full overflow-hidden">
+                    <div class="p-6 border-b border-surface-dim">
+                        <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Jadwal Wawancara Terdekat
+                        </h3>
+                    </div>
+                    <div class="flex-1 overflow-auto">
+                        @if(count($upcomingInterviews) === 0)
+                            <div class="p-8 text-center text-outline-variant italic text-sm">Tidak ada jadwal wawancara yang akan datang.</div>
+                        @else
+                            <div class="divide-y divide-surface-dim">
+                                @foreach($upcomingInterviews as $iv)
+                                    <div class="p-4 hover:bg-surface-container-low transition-colors flex gap-4">
+                                        <div class="w-12 shrink-0 text-center">
+                                            <span class="block text-xl font-black text-primary">{{ \Carbon\Carbon::parse($iv['time'])->format('d') }}</span>
+                                            <span class="block text-[10px] font-bold text-outline-variant uppercase">{{ \Carbon\Carbon::parse($iv['time'])->format('M') }}</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-on-surface">{{ $iv['candidate'] }}</h4>
+                                            <p class="text-xs text-outline-variant mb-1">Divisi: {{ $iv['division'] }}</p>
+                                            <div class="flex items-center gap-2 text-[10px] font-semibold text-primary uppercase mt-2">
+                                                <span class="bg-surface-container px-2 py-0.5 rounded">{{ \Carbon\Carbon::parse($iv['time'])->format('H:i') }}</span>
+                                                <span class="bg-surface-container px-2 py-0.5 rounded">{{ $iv['format'] ?? 'N/A' }}</span>
+                                                @if($iv['location'])
+                                                    <span class="bg-surface-container px-2 py-0.5 rounded max-w-[120px] truncate" title="{{ $iv['location'] }}">{{ $iv['location'] }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
-            @endif
+
+                <!-- Collaborators Snapshot -->
+                <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-6">
+                    <h3 class="text-lg font-bold text-on-surface flex items-center gap-2 mb-4">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Kolaborator & Tim
+                    </h3>
+                    @if(count($collaborators) === 0)
+                        <p class="text-sm text-outline-variant italic">Anda belum memiliki tim kolaborator di event manapun.</p>
+                    @else
+                        <div class="flex flex-wrap gap-2">
+                            @foreach(array_slice($collaborators, 0, 5) as $collab)
+                                <div class="flex items-center gap-2 bg-surface-container border border-surface-dim rounded-full px-3 py-1.5" title="{{ $collab['event'] }}">
+                                    <div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">{{ substr($collab['name'], 0, 1) }}</div>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-bold text-on-surface leading-none">{{ $collab['name'] }}</span>
+                                        <span class="text-[9px] font-semibold text-outline-variant uppercase">{{ $collab['role'] }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                            @if(count($collaborators) > 5)
+                                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container border border-surface-dim text-xs font-bold text-outline-variant">
+                                    +{{ count($collaborators) - 5 }}
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+
+            </div>
         </div>
+
     @endif
 </div>

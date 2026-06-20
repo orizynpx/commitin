@@ -56,88 +56,88 @@ new #[Layout('layouts.app')] class extends Component
 
 <div class="max-w-2xl mx-auto py-8">
     <div class="mb-6">
-        <a href="{{ route('organizer.dashboard') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
-            &larr; Kembali ke Dashboard
+        <a href="{{ route('organizer.dashboard') }}" class="text-primary hover:text-on-primary-container text-sm font-semibold flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Kembali ke Dashboard
         </a>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <span class="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1 block">
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
+        <span class="text-xs font-semibold uppercase tracking-wider text-primary mb-1 block">
             Event: {{ $vacancy->event->event_name }}
         </span>
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ __('Sunting Lowongan Divisi') }}</h1>
+        <h1 class="text-2xl font-bold text-on-surface mb-6">{{ __('Sunting Lowongan Divisi') }}</h1>
 
         <form wire:submit.prevent="update" class="space-y-6">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Divisi</label>
+                <label class="block text-sm font-semibold text-on-surface-variant mb-2">Nama Divisi</label>
                 <input 
                     type="text" 
                     wire:model="division" 
                     placeholder="Masukkan nama divisi (misal: Dokumentasi, Acara, Humas)" 
-                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('division') border-red-500 @enderror"
+                    class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('division') border-red-500 @enderror"
                 />
                 @error('division')
-                    <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Tugas & Kriteria</label>
+                <label class="block text-sm font-semibold text-on-surface-variant mb-2">Deskripsi Tugas & Kriteria</label>
                 <textarea 
                     wire:model="vacancy_description" 
                     rows="5"
                     placeholder="Jelaskan mengenai tanggung jawab divisi ini dan kriteria khusus pelamar..." 
-                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('vacancy_description') border-red-500 @enderror"
+                    class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('vacancy_description') border-red-500 @enderror"
                 ></textarea>
                 @error('vacancy_description')
-                    <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Status Lowongan</label>
+                <label class="block text-sm font-semibold text-on-surface-variant mb-2">Status Lowongan</label>
                 <select 
                     wire:model="status" 
-                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('status') border-red-500 @enderror"
+                    class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('status') border-red-500 @enderror"
                 >
                     <option value="OPEN">BUKA (OPEN)</option>
                     <option value="CLOSED">TUTUP (CLOSED)</option>
                 </select>
                 @error('status')
-                    <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Keahlian Yang Disyaratkan</label>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-gray-100 rounded-lg p-4 bg-gray-50/50">
+                <label class="block text-sm font-semibold text-on-surface-variant mb-2">Keahlian Yang Disyaratkan</label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-surface-dim rounded-lg p-4 bg-surface-container-low">
                     @foreach(App\Models\Skill::all() as $skill)
-                        <label class="inline-flex items-center text-sm text-gray-700">
+                        <label class="inline-flex items-center text-sm text-on-surface-variant">
                             <input 
                                 type="checkbox" 
                                 wire:model="selectedSkills" 
                                 value="{{ $skill->skill_id }}" 
-                                class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
+                                class="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary mr-2"
                             />
                             {{ $skill->skill_name }}
                         </label>
                     @endforeach
                 </div>
                 @error('selectedSkills')
-                    <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror
             </div>
 
-            <div class="pt-4 border-t border-gray-50 flex justify-end gap-3">
+            <div class="pt-4 border-t border-surface-dim flex justify-end gap-3">
                 <a 
                     href="{{ route('organizer.dashboard') }}" 
-                    class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+                    class="bg-surface-container-lowest border border-surface-dim text-on-surface-variant hover:bg-surface-container px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
                 >
                     Batal
                 </a>
                 <button 
                     type="submit" 
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm"
+                    class="bg-primary hover:bg-primary-container text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm"
                 >
                     Perbarui Lowongan
                 </button>

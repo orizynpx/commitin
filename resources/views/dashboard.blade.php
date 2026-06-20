@@ -8,7 +8,7 @@
     @endphp
 
     @if (session('status'))
-        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded shadow-sm">
+        <div class="bg-surface-container border-l-4 border-blue-400 p-4 mb-6 rounded shadow-sm">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -32,33 +32,33 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-2">Cari Lowongan Kepanitiaan</h3>
                     <p class="text-gray-500 text-sm mb-4">Temukan divisi kepanitiaan yang sesuai dengan minat dan keahlian utama Anda.</p>
                 </div>
-                <a href="#" class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 text-sm">
-                    Mulai Eksplorasi &rarr;
+                <a href="#" class="inline-flex items-center text-primary font-semibold hover:text-primary-container text-sm">
+                    Mulai Eksplorasi <svg class="w-4 h-4 ml-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-2">Kelola Profil & Portofolio</h3>
                     <p class="text-gray-500 text-sm mb-4">Lengkapi data diri, keahlian, dan riwayat pengalaman untuk meningkatkan peluang diterima.</p>
                 </div>
-                <a href="{{ route('profile') }}" class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 text-sm">
-                    Sunting Profil &rarr;
+                <a href="{{ route('profile') }}" class="inline-flex items-center text-primary font-semibold hover:text-primary-container text-sm">
+                    Sunting Profil <svg class="w-4 h-4 ml-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </a>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-8 text-center">
             <div class="max-w-md mx-auto">
                 <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                 <h4 class="text-lg font-bold text-gray-900 mb-1">Belum Ada Lamaran Aktif</h4>
                 <p class="text-gray-500 text-sm mb-6">Anda belum mendaftar ke lowongan kepanitiaan mana pun saat ini.</p>
-                <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm inline-block">
+                <a href="#" class="bg-primary hover:bg-primary-container text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm inline-block">
                     Cari Lowongan Sekarang
                 </a>
             </div>
@@ -72,7 +72,7 @@
 
         @if ($status === 'pending')
             <!-- PENDING VERIFICATION STATE -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center my-12">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-8 text-center my-12">
                 <div class="max-w-xl mx-auto">
                     <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -87,7 +87,7 @@
                         </p>
                     </div>
                     <div class="flex justify-center gap-3">
-                        <a href="{{ route('profile') }}" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                        <a href="{{ route('profile') }}" class="bg-surface-container-lowest border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                             Lihat Profil Organisasi
                         </a>
                         <form method="POST" action="{{ route('logout') }}" class="inline">
@@ -102,7 +102,7 @@
 
         @elseif ($status === 'rejected')
             <!-- REJECTED VERIFICATION STATE -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center my-12">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-8 text-center my-12">
                 <div class="max-w-xl mx-auto">
                     <div class="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -117,7 +117,7 @@
                         </p>
                     </div>
                     <div class="flex justify-center gap-3">
-                        <a href="{{ route('profile') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-200">
+                        <a href="{{ route('profile') }}" class="bg-primary hover:bg-primary-container text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-200">
                             Perbarui & Ajukan Ulang Profil
                         </a>
                         <form method="POST" action="{{ route('logout') }}" class="inline">
@@ -140,9 +140,9 @@
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <!-- Card 1 -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
                     <div class="flex justify-between items-start mb-4">
-                        <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                        <div class="p-2 bg-surface-container rounded-lg text-primary">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
                     </div>
@@ -151,7 +151,7 @@
                 </div>
 
                 <!-- Card 2 -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-2 bg-teal-50 rounded-lg text-teal-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -162,9 +162,9 @@
                 </div>
 
                 <!-- Card 3 -->
-                <div class="bg-blue-50 rounded-xl shadow-sm border border-blue-100 p-6">
+                <div class="bg-surface-container rounded-xl shadow-sm border border-blue-100 p-6">
                     <div class="flex justify-between items-start mb-4">
-                        <div class="p-2 bg-blue-600 rounded-lg text-white shadow-md shadow-blue-200">
+                        <div class="p-2 bg-primary rounded-lg text-white shadow-md shadow-blue-200">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         </div>
                     </div>
@@ -183,12 +183,12 @@
                     </a>
                 </div>
                 
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-8 text-center">
                     <div class="max-w-md mx-auto">
                         <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0V9a2 2 0 00-2-2H6a2 2 0 00-2 2v2m0 4h12"></path></svg>
                         <h4 class="text-lg font-bold text-gray-900 mb-1">Belum Ada Lowongan</h4>
                         <p class="text-gray-500 text-sm mb-6">Organisasi Anda belum menerbitkan lowongan kepanitiaan aktif saat ini.</p>
-                        <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm inline-block">
+                        <a href="#" class="bg-primary hover:bg-primary-container text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm inline-block">
                             Buat Lowongan Sekarang
                         </a>
                     </div>
@@ -204,23 +204,23 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-2">Verifikasi Ormawa</h3>
                     <p class="text-gray-500 text-sm mb-4">Tinjau dan proses pengajuan verifikasi akun dari organisasi kemahasiswaan baru.</p>
                 </div>
-                <a href="#" class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 text-sm">
-                    Kelola Verifikasi &rarr;
+                <a href="#" class="inline-flex items-center text-primary font-semibold hover:text-primary-container text-sm">
+                    Kelola Verifikasi <svg class="w-4 h-4 ml-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-2">Moderasi Keahlian</h3>
                     <p class="text-gray-500 text-sm mb-4">Kelola, setujui, ubah nama, atau gabungkan keahlian/skill tag dari mahasiswa.</p>
                 </div>
-                <a href="{{ route('admin.skills') }}" class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 text-sm">
-                    Kelola Keahlian &rarr;
+                <a href="{{ route('admin.skills') }}" class="inline-flex items-center text-primary font-semibold hover:text-primary-container text-sm">
+                    Kelola Keahlian <svg class="w-4 h-4 ml-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </a>
             </div>
         </div>

@@ -43,50 +43,50 @@ new #[Layout('layouts.app')] class extends Component
 
 <div class="max-w-2xl mx-auto py-8">
     <div class="mb-6">
-        <a href="{{ route('organizer.events.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
-            &larr; Kembali ke Daftar Event
+        <a href="{{ route('organizer.events.index') }}" class="text-primary hover:text-on-primary-container text-sm font-semibold flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Kembali ke Daftar Event
         </a>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ __('Buat Kegiatan Baru') }}</h1>
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
+        <h1 class="text-2xl font-bold text-on-surface mb-6">{{ __('Buat Kegiatan Baru') }}</h1>
 
         <form wire:submit.prevent="store" class="space-y-6">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Event / Kegiatan</label>
+                <label class="block text-sm font-semibold text-on-surface-variant mb-2">Nama Event / Kegiatan</label>
                 <input 
                     type="text" 
                     wire:model="event_name" 
                     placeholder="Masukkan nama event (misal: Rapat Kerja 2026)" 
-                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('event_name') border-red-500 @enderror"
+                    class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('event_name') border-red-500 @enderror"
                 />
                 @error('event_name')
-                    <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Pelaksanaan</label>
+                <label class="block text-sm font-semibold text-on-surface-variant mb-2">Tanggal Pelaksanaan</label>
                 <input 
                     type="date" 
                     wire:model="event_date" 
-                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('event_date') border-red-500 @enderror"
+                    class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('event_date') border-red-500 @enderror"
                 />
                 @error('event_date')
-                    <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Kegiatan</label>
+                <label class="block text-sm font-semibold text-on-surface-variant mb-2">Deskripsi Kegiatan</label>
                 <textarea 
                     wire:model="description" 
                     rows="5"
                     placeholder="Jelaskan mengenai agenda, latar belakang, atau tujuan kegiatan ini..." 
-                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('description') border-red-500 @enderror"
+                    class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('description') border-red-500 @enderror"
                 ></textarea>
                 @error('description')
-                    <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror
             </div>
 
@@ -96,25 +96,25 @@ new #[Layout('layouts.app')] class extends Component
                         type="checkbox" 
                         wire:model="is_official" 
                         id="is_official"
-                        class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        class="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
                     />
                 </div>
                 <div class="ml-3 text-sm">
-                    <label for="is_official" class="font-semibold text-gray-700">Kegiatan Resmi Kampus</label>
-                    <p class="text-gray-500 text-xs">Centang jika kegiatan ini merupakan agenda resmi/formal dari Ormawa/BEM.</p>
+                    <label for="is_official" class="font-semibold text-on-surface-variant">Kegiatan Resmi Kampus</label>
+                    <p class="text-outline-variant text-xs">Centang jika kegiatan ini merupakan agenda resmi/formal dari Ormawa/BEM.</p>
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-gray-50 flex justify-end gap-3">
+            <div class="pt-4 border-t border-surface-dim flex justify-end gap-3">
                 <a 
                     href="{{ route('organizer.events.index') }}" 
-                    class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+                    class="bg-surface-container-lowest border border-surface-dim text-on-surface-variant hover:bg-surface-container px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
                 >
                     Batal
                 </a>
                 <button 
                     type="submit" 
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm"
+                    class="bg-primary hover:bg-primary-container text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm"
                 >
                     Simpan Event
                 </button>

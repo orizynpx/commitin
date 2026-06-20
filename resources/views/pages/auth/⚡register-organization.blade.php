@@ -56,11 +56,11 @@ new #[Layout('layouts.guest')] class extends Component
 
 <div>
     <!-- Registration Type Tabs -->
-    <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-        <a href="{{ route('register') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" wire:navigate>
+    <div class="flex border-b border-gray-200  mb-6">
+        <a href="{{ route('register') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-transparent text-outline hover:text-on-surface  dark:hover:text-gray-300" wire:navigate>
             {{ __('Student Account') }}
         </a>
-        <a href="{{ route('register.organization') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400" wire:navigate>
+        <a href="{{ route('register.organization') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-indigo-500 text-primary dark:text-indigo-400" wire:navigate>
             {{ __('Organization Account') }}
         </a>
     </div>
@@ -83,7 +83,7 @@ new #[Layout('layouts.guest')] class extends Component
         <!-- Organization Level -->
         <div class="mt-4">
             <x-input-label for="organization_level" :value="__('Organization Level')" />
-            <select wire:model="organization_level" id="organization_level" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" name="organization_level" required>
+            <select wire:model="organization_level" id="organization_level" class="block mt-1 w-full rounded-md shadow-sm border-surface-dim    focus:border-primary  focus:ring-primary " name="organization_level" required>
                 <option value="study_program">{{ __('Study Program Level') }}</option>
                 <option value="faculty">{{ __('Faculty Level') }}</option>
                 <option value="university">{{ __('University Level') }}</option>
@@ -111,7 +111,7 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}" wire:navigate>
+            <a class="underline text-sm text-on-surface-variant  hover:text-on-surface  rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary " href="{{ route('login') }}" wire:navigate>
                 {{ __('Already registered?') }}
             </a>
 

@@ -248,97 +248,98 @@ new #[Layout('layouts.app')] class extends Component
     @endif
 
     @if ($isEditing)
-        <!-- Full-Page Edit Form (Strictly Unstyled) -->
-        <div style="padding: 20px; border: 1px solid #ccc; font-family: sans-serif; background-color: #fff;">
-            <h2>Sunting Profil</h2>
-            <form wire:submit.prevent="updateProfile">
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">Nama Lengkap:</label>
-                    <input type="text" wire:model="name" required style="width: 100%; padding: 5px; box-sizing: border-box;" />
-                    @error('name') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
-                </div>
-
-                @if ($role === 'student')
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px;">NIM / Student ID:</label>
-                        <input type="text" wire:model="student_id" required style="width: 100%; padding: 5px; box-sizing: border-box;" />
-                        @error('student_id') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
+        <div class="max-w-2xl mx-auto py-8">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
+                <h2 class="text-2xl font-bold text-on-surface mb-6">Sunting Profil</h2>
+                <form wire:submit.prevent="updateProfile" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-on-surface-variant mb-2">Nama Lengkap:</label>
+                        <input type="text" wire:model="name" required class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                        @error('name') <span class="text-xs text-error block mt-1">{{ $message }}</span> @enderror
                     </div>
 
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px;">Fakultas:</label>
-                        <input type="text" wire:model="faculty" required style="width: 100%; padding: 5px; box-sizing: border-box;" />
-                        @error('faculty') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px;">Program Studi / Jurusan:</label>
-                        <input type="text" wire:model="study_program" required style="width: 100%; padding: 5px; box-sizing: border-box;" />
-                        @error('study_program') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px;">Tahun Masuk / Angkatan:</label>
-                        <input type="number" wire:model="entry_year" min="1900" max="2100" style="width: 100%; padding: 5px; box-sizing: border-box;" />
-                        @error('entry_year') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px;">Tentang Saya / Bio:</label>
-                        <textarea wire:model="bio" rows="4" style="width: 100%; padding: 5px; box-sizing: border-box;"></textarea>
-                        @error('bio') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
-                    </div>
-                @elseif ($role === 'organization')
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px;">Tingkat Organisasi:</label>
-                        <select wire:model="organization_level" required style="width: 100%; padding: 5px; box-sizing: border-box;">
-                            <option value="study_program">Tingkat Program Studi</option>
-                            <option value="faculty">Tingkat Fakultas</option>
-                            <option value="university">Tingkat Universitas</option>
-                        </select>
-                        @error('organization_level') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px;">Deskripsi Organisasi:</label>
-                        <textarea wire:model="description" rows="4" style="width: 100%; padding: 5px; box-sizing: border-box;"></textarea>
-                        @error('description') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
-                    </div>
-                @endif
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">Foto Profil / Avatar:</label>
-                    <input type="file" wire:model="avatarFile" accept="image/*" />
-                    <div wire:loading wire:target="avatarFile" style="font-size: 12px; color: blue; margin-top: 5px;">
-                        Sedang mengunggah foto...
-                    </div>
-                    @error('avatarFile') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
-                    
-                    @if ($avatarFile && method_exists($avatarFile, 'getMimeType') && str_starts_with($avatarFile->getMimeType(), 'image/'))
-                        <div style="margin-top: 10px;">
-                            <p style="font-size: 12px; color: green;">Pratinjau Foto Baru:</p>
-                            <img src="{{ $avatarFile->temporaryUrl() }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;" />
+                    @if ($role === 'student')
+                        <div>
+                            <label class="block text-sm font-semibold text-on-surface-variant mb-2">NIM / Student ID:</label>
+                            <input type="text" wire:model="student_id" required class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                            @error('student_id') <span class="text-xs text-error block mt-1">{{ $message }}</span> @enderror
                         </div>
-                    @elseif (Auth::user()->avatar_url)
-                        <div style="margin-top: 10px;">
-                            <p style="font-size: 12px; color: #777;">Foto Saat Ini:</p>
-                            <img src="{{ Auth::user()->avatar_url }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;" />
+
+                        <div>
+                            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Fakultas:</label>
+                            <input type="text" wire:model="faculty" required class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                            @error('faculty') <span class="text-xs text-error block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Program Studi / Jurusan:</label>
+                            <input type="text" wire:model="study_program" required class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                            @error('study_program') <span class="text-xs text-error block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Tahun Masuk / Angkatan:</label>
+                            <input type="number" wire:model="entry_year" min="1900" max="2100" class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                            @error('entry_year') <span class="text-xs text-error block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Tentang Saya / Bio:</label>
+                            <textarea wire:model="bio" rows="4" class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                            @error('bio') <span class="text-xs text-error block mt-1">{{ $message }}</span> @enderror
+                        </div>
+                    @elseif ($role === 'organization')
+                        <div>
+                            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Tingkat Organisasi:</label>
+                            <select wire:model="organization_level" required class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="study_program">Tingkat Program Studi</option>
+                                <option value="faculty">Tingkat Fakultas</option>
+                                <option value="university">Tingkat Universitas</option>
+                            </select>
+                            @error('organization_level') <span class="text-xs text-error block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Deskripsi Organisasi:</label>
+                            <textarea wire:model="description" rows="4" class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                            @error('description') <span class="text-xs text-error block mt-1">{{ $message }}</span> @enderror
                         </div>
                     @endif
-                </div>
 
-                <div style="margin-top: 20px;">
-                    <button type="button" wire:click="$set('isEditing', false)" style="margin-right: 10px; padding: 5px 15px;">Batal</button>
-                    <button type="submit" style="padding: 5px 15px;">Simpan Perubahan</button>
-                </div>
-            </form>
+                    <div>
+                        <label class="block text-sm font-semibold text-on-surface-variant mb-2">Foto Profil / Avatar:</label>
+                        <input type="file" wire:model="avatarFile" accept="image/*" class="w-full text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-surface-container file:text-primary hover:file:bg-surface-dim transition-colors" />
+                        <div wire:loading wire:target="avatarFile" class="text-xs text-primary mt-2">
+                            Sedang mengunggah foto...
+                        </div>
+                        @error('avatarFile') <span class="text-xs text-error block mt-1">{{ $message }}</span> @enderror
+                        
+                        @if ($avatarFile && method_exists($avatarFile, 'getMimeType') && str_starts_with($avatarFile->getMimeType(), 'image/'))
+                            <div class="mt-4">
+                                <p class="text-xs text-on-surface-variant mb-2">Pratinjau Foto Baru:</p>
+                                <img src="{{ $avatarFile->temporaryUrl() }}" class="w-24 h-24 object-cover rounded-full border-4 border-surface-container" />
+                            </div>
+                        @elseif (Auth::user()->avatar_url)
+                            <div class="mt-4">
+                                <p class="text-xs text-outline-variant mb-2">Foto Saat Ini:</p>
+                                <img src="{{ Auth::user()->avatar_url }}" class="w-24 h-24 object-cover rounded-full border-4 border-surface-container" />
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="pt-4 border-t border-surface-dim flex justify-end gap-3">
+                        <button type="button" wire:click="$set('isEditing', false)" class="bg-surface-container-lowest border border-surface-dim text-on-surface-variant hover:bg-surface-container px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors">Batal</button>
+                        <button type="submit" class="bg-primary hover:bg-primary-container text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
         </div>
     @else
         <!-- View Profile Screen -->
         <!-- Header / Hero Section -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+        <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim overflow-hidden mb-8">
             <!-- Cover Image -->
-            <div class="h-48 bg-gradient-to-r from-blue-600 to-blue-400 w-full relative">
+            <div class="h-48 bg-primary w-full relative">
                 <div class="absolute inset-0 bg-black/10"></div>
             </div>
             
@@ -347,7 +348,7 @@ new #[Layout('layouts.app')] class extends Component
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end -mt-16 mb-4 gap-4">
                     <!-- Avatar & Name -->
                     <div class="flex flex-col md:flex-row items-start md:items-end gap-6">
-                        <div class="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md shrink-0 relative z-10">
+                        <div class="w-32 h-32 rounded-full border-4 border-white bg-surface-container-lowest overflow-hidden shadow-md shrink-0 relative z-10">
                             @if(Auth::user()->avatar_url)
                                 <img src="{{ Auth::user()->avatar_url }}" alt="Profile avatar" class="w-full h-full object-cover">
                             @else
@@ -355,10 +356,10 @@ new #[Layout('layouts.app')] class extends Component
                             @endif
                         </div>
                         <div class="mb-2">
-                            <h1 class="text-3xl font-bold text-gray-900 mb-1">{{ $name }}</h1>
+                            <h1 class="text-3xl font-bold text-on-surface mb-1">{{ $name }}</h1>
                             @if ($role === 'student')
-                                <p class="text-lg text-blue-600 font-medium mb-1">{{ $study_program ?: 'Belum Mengisi Jurusan' }} &bull; Angkatan {{ $entry_year ?: '-' }}</p>
-                                <div class="flex items-center text-sm text-gray-500 gap-4">
+                                <p class="text-lg text-primary font-medium mb-1">{{ $study_program ?: 'Belum Mengisi Jurusan' }} &bull; Angkatan {{ $entry_year ?: '-' }}</p>
+                                <div class="flex items-center text-sm text-outline gap-4">
                                     <span class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                         {{ $faculty ?: 'Belum Mengisi Fakultas' }}
@@ -368,8 +369,8 @@ new #[Layout('layouts.app')] class extends Component
                                     </span>
                                 </div>
                             @elseif ($role === 'organization')
-                                <p class="text-lg text-blue-600 font-medium mb-1">{{ __('Tingkat Ormawa: ') }} {{ ucfirst(str_replace('_', ' ', $organization_level)) }}</p>
-                                <div class="flex items-center text-sm text-gray-500 gap-4">
+                                <p class="text-lg text-primary font-medium mb-1">{{ __('Tingkat Ormawa: ') }} {{ ucfirst(str_replace('_', ' ', $organization_level)) }}</p>
+                                <div class="flex items-center text-sm text-outline gap-4">
                                     @if ($verification_status === 'verified')
                                         <span class="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
@@ -386,7 +387,7 @@ new #[Layout('layouts.app')] class extends Component
                                     @endif
                                 </div>
                             @elseif ($role === 'admin')
-                                <p class="text-lg text-blue-600 font-medium mb-1">Administrator Platform</p>
+                                <p class="text-lg text-primary font-medium mb-1">Administrator Platform</p>
                             @endif
                         </div>
                     </div>
@@ -394,7 +395,7 @@ new #[Layout('layouts.app')] class extends Component
                     <!-- Actions -->
                     <div class="flex gap-3 w-full md:w-auto">
                         @if ($role !== 'admin')
-                            <button wire:click="$set('isEditing', true)" class="flex-1 md:flex-none bg-blue-600 text-white hover:bg-blue-700 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-200 flex items-center justify-center gap-2">
+                            <button wire:click="$set('isEditing', true)" class="flex-1 md:flex-none bg-primary text-white hover:bg-primary-container px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-primary-fixed-dim flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 Edit Profil
                             </button>
@@ -410,42 +411,42 @@ new #[Layout('layouts.app')] class extends Component
                 <!-- Left/Main Column -->
                 <div class="lg:col-span-2 space-y-8">
                     <!-- About Section -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-                        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-8">
+                        <h3 class="text-xl font-bold text-on-surface mb-4 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             Tentang Saya
                         </h3>
-                        <p class="text-gray-600 leading-relaxed text-sm whitespace-pre-line">
+                        <p class="text-on-surface-variant leading-relaxed text-sm whitespace-pre-line">
                             {{ $bio ?: 'Belum ada deskripsi tentang diri Anda. Silakan klik tombol Edit Profil untuk menambahkannya.' }}
                         </p>
                     </div>
 
                     <!-- Experience Timeline -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+                    <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-8">
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            <h3 class="text-xl font-bold text-on-surface flex items-center gap-2">
+                                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                                 Pengalaman Kepanitiaan & Organisasi
                             </h3>
-                            <button wire:click="loadExperience()" class="text-sm font-medium text-blue-600 hover:text-blue-800">+ Tambah</button>
+                            <button wire:click="loadExperience()" class="text-sm font-medium text-primary hover:text-on-primary-container">+ Tambah</button>
                         </div>
                         
                         @if (Auth::user()->experiences->isEmpty())
-                            <p class="text-sm text-gray-500 italic">{{ __('Belum ada riwayat pengalaman kepanitiaan / organisasi.') }}</p>
+                            <p class="text-sm text-outline italic">{{ __('Belum ada riwayat pengalaman kepanitiaan / organisasi.') }}</p>
                         @else
-                            <div class="relative border-l-2 border-blue-100 ml-3 space-y-8">
+                            <div class="relative border-l-2 border-primary-fixed-dim ml-3 space-y-8">
                                 @foreach (Auth::user()->experiences as $exp)
                                     <div class="relative pl-6">
-                                        <div class="absolute w-4 h-4 bg-blue-600 rounded-full -left-[9px] top-1 border-4 border-white shadow-sm"></div>
+                                        <div class="absolute w-4 h-4 bg-primary rounded-full -left-[9px] top-1 border-4 border-white shadow-sm"></div>
                                         <div class="flex justify-between items-start mb-1 gap-4">
-                                            <h4 class="text-lg font-bold text-gray-900 leading-snug">{{ $exp->title }}</h4>
+                                            <h4 class="text-lg font-bold text-on-surface leading-snug">{{ $exp->title }}</h4>
                                             <div class="flex items-center gap-2 shrink-0">
-                                                <button wire:click="loadExperience('{{ $exp->experience_id }}')" class="text-xs text-blue-600 hover:text-blue-800">{{ __('Edit') }}</button>
-                                                <span class="text-gray-300">|</span>
+                                                <button wire:click="loadExperience('{{ $exp->experience_id }}')" class="text-xs text-primary hover:text-on-primary-container">{{ __('Edit') }}</button>
+                                                <span class="text-outline-variant">|</span>
                                                 <button onclick="confirm('Yakin ingin menghapus?') || event.stopImmediatePropagation()" wire:click="deleteExperience('{{ $exp->experience_id }}')" class="text-xs text-red-600 hover:text-red-800">{{ __('Hapus') }}</button>
                                             </div>
                                         </div>
-                                        <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{{ $exp->description }}</p>
+                                        <p class="text-sm text-on-surface-variant leading-relaxed whitespace-pre-line">{{ $exp->description }}</p>
                                     </div>
                                 @endforeach
                             </div>
@@ -456,28 +457,28 @@ new #[Layout('layouts.app')] class extends Component
                 <!-- Right Sidebar Column -->
                 <div class="space-y-8">
                     <!-- Skills Section -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-6">
+                        <h3 class="text-lg font-bold text-on-surface flex items-center gap-2 mb-4">
+                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                             Keahlian Saya
                         </h3>
 
                         <!-- Add Skill Form inline -->
                         <form wire:submit.prevent="addSkill" class="mb-4 flex gap-2">
                             <x-text-input wire:model="skillInput" placeholder="Tambah keahlian (misal: Figma)..." class="flex-1 text-sm px-3 py-1.5" />
-                            <button type="submit" class="bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors">
+                            <button type="submit" class="bg-primary text-white hover:bg-primary-container px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors">
                                 {{ __('Tambah') }}
                             </button>
                         </form>
                         
                         @if (Auth::user()->skills->isEmpty())
-                            <p class="text-sm text-gray-500 italic">{{ __('Belum mengisi keahlian.') }}</p>
+                            <p class="text-sm text-outline italic">{{ __('Belum mengisi keahlian.') }}</p>
                         @else
                             <div class="flex flex-wrap gap-2">
                                 @foreach (Auth::user()->skills as $skill)
-                                    <span class="bg-blue-50 border border-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5">
+                                    <span class="bg-surface-container border border-surface-dim text-on-surface px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1.5">
                                         {{ $skill->skill_name }}
-                                        <button wire:click="removeSkill('{{ $skill->skill_id }}')" class="text-blue-400 hover:text-blue-800 font-bold focus:outline-none">&times;</button>
+                                        <button wire:click="removeSkill('{{ $skill->skill_id }}')" class="text-error hover:text-error-container font-black focus:outline-none ml-1">&times;</button>
                                     </span>
                                 @endforeach
                             </div>
@@ -488,29 +489,29 @@ new #[Layout('layouts.app')] class extends Component
         @elseif ($role === 'organization')
             <div class="space-y-8 mb-8">
                 <!-- About Section for Organizations -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-8">
+                    <h3 class="text-xl font-bold text-on-surface mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                         Tentang Organisasi
                     </h3>
-                    <p class="text-gray-600 leading-relaxed text-sm whitespace-pre-line">
+                    <p class="text-on-surface-variant leading-relaxed text-sm whitespace-pre-line">
                         {{ $description ?: 'Belum ada deskripsi organisasi. Silakan klik tombol Edit Profil untuk menambahkannya.' }}
                     </p>
                 </div>
             </div>
         @elseif ($role === 'admin')
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-8">
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Informasi Administrator</h3>
-                <p class="text-gray-600 text-sm">Nama Akun: {{ $name }}</p>
-                <p class="text-gray-600 text-sm">Email: {{ $email }}</p>
-                <p class="text-gray-500 text-xs mt-4">Anda masuk dengan peran Admin. Anda dapat menavigasi menu di bilah samping untuk melakukan verifikasi akun ormawa.</p>
+            <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-8 mb-8">
+                <h3 class="text-xl font-bold text-on-surface mb-2">Informasi Administrator</h3>
+                <p class="text-on-surface-variant text-sm">Nama Akun: {{ $name }}</p>
+                <p class="text-on-surface-variant text-sm">Email: {{ $email }}</p>
+                <p class="text-outline text-xs mt-4">Anda masuk dengan peran Admin. Anda dapat menavigasi menu di bilah samping untuk melakukan verifikasi akun ormawa.</p>
             </div>
         @endif
 
         <!-- EXPERIENCE MODAL -->
         <x-modal name="experience-modal">
             <form wire:submit.prevent="saveExperience" class="p-6">
-                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                <h2 class="text-lg font-medium text-on-surface dark:text-gray-100">
                     {{ $experienceId ? __('Edit Pengalaman') : __('Tambah Pengalaman Baru') }}
                 </h2>
 
@@ -522,7 +523,7 @@ new #[Layout('layouts.app')] class extends Component
 
                 <div class="mt-4">
                     <x-input-label for="exp_desc" :value="__('Deskripsi / Penjelasan Singkat')" />
-                    <textarea wire:model="experienceDescription" id="exp_desc" placeholder="Tuliskan kontribusi dan program kerja yang Anda tangani..." class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 text-sm" rows="4" required></textarea>
+                    <textarea wire:model="experienceDescription" id="exp_desc" placeholder="Tuliskan kontribusi dan program kerja yang Anda tangani..." class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-outline-variant focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 text-sm" rows="4" required></textarea>
                     <x-input-error :messages="$errors->get('experienceDescription')" class="mt-2" />
                 </div>
 
