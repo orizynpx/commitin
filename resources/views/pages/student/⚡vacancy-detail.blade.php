@@ -2,23 +2,27 @@
 
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use App\Models\Vacancy;
 use App\Models\VacancyApplication;
+use Illuminate\Support\Facades\Storage;
 
 new #[Layout('layouts.app')] class extends Component
 {
-    public Vacancy $vacancy;
-    public string $file_url = '';
+    use WithFileUploads;
 
-    public function mount(string $vacancy): void
+    public Vacancy $vacancy;
+    public $file;
+
+    public function mount(Vacancy $vacancy): void
     {
-        $this->vacancy = Vacancy::with(['event', 'skills'])->findOrFail($vacancy);
+        $this->vacancy = $vacancy->loadMissing(['event', 'skills']);
     }
 
     public function apply()
     {
         $this->validate([
-            'file_url' => 'required|url|max:2083',
+            'file' => 'required|file|mimes:pdf|max:10240',
         ]);
 
         // Check if already applied
@@ -31,15 +35,19 @@ new #[Layout('layouts.app')] class extends Component
             return;
         }
 
+        // Store the uploaded file to the local public disk (storage/app/public/applications)
+        $path = $this->file->store('applications', 'public');
+        $file_url = Storage::url($path);
+
         VacancyApplication::create([
             'user_id' => auth()->id(),
             'vacancy_id' => $this->vacancy->vacancy_id,
             'status' => 'pending',
-            'file_url' => $this->file_url,
+            'file_url' => $file_url,
         ]);
 
         session()->flash('success', 'Lamaran Anda berhasil dikirim!');
-        $this->file_url = '';
+        $this->file = null;
     }
 }; ?>
 
@@ -178,18 +186,20 @@ new #[Layout('layouts.app')] class extends Component
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Kirim Lamaran</h3>
                     <form wire:submit.prevent="apply" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">Link CV/Portofolio</label>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">Unggah CV/Portofolio (PDF)</label>
                             <input 
-                                type="url" 
-                                wire:model="file_url" 
-                                placeholder="https://drive.google.com/..." 
-                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('file_url') border-red-500 @enderror"
+                                type="file" 
+                                wire:model="file" 
+                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('file') border-red-500 @enderror"
                             />
-                            @error('file_url')
+                            <div wire:loading wire:target="file" class="text-xs text-blue-500 mt-1">
+                                Sedang mengunggah berkas...
+                            </div>
+                            @error('file')
                                 <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
                             @enderror
                             <p class="text-[10px] text-gray-400 mt-1 leading-normal">
-                                Unggah CV Anda di Google Drive, Dropbox, atau platform sejenis, pastikan hak aksesnya publik, lalu tempel tautannya di atas.
+                                Unggah berkas resume/portfolio Anda dalam format PDF dengan ukuran maksimal 10MB.
                             </p>
                         </div>
 
