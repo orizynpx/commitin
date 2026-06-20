@@ -5,12 +5,13 @@ use App\Models\Event;
 use App\Models\Vacancy;
 use App\Models\Skill;
 use App\Models\VacancyApplication;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 new #[Layout('layouts.app')] class extends Component
 {
-    // Search & Filter state
+    // Search & Filter state for User Management
     public string $search = '';
     public string $roleFilter = 'all'; // all, student, organization, admin
     public bool $onlyBlocked = false;
@@ -71,133 +72,300 @@ new #[Layout('layouts.app')] class extends Component
 
         session()->flash('status', "Lowongan divisi \"{$division}\" berhasil dihapus.");
     }
+
+    public function approveOrganization(string $orgProfileId): void
+    {
+        DB::table('organization_profile')->where('organization_profile_id', $orgProfileId)->update([
+            'verification_status' => 'verified',
+            'verified_at' => now(),
+        ]);
+        session()->flash('status', "Profil organisasi berhasil diverifikasi.");
+    }
+
+    public function rejectOrganization(string $orgProfileId): void
+    {
+        DB::table('organization_profile')->where('organization_profile_id', $orgProfileId)->update([
+            'verification_status' => 'rejected',
+            'verified_at' => null,
+        ]);
+        session()->flash('status', "Verifikasi profil organisasi ditolak.");
+    }
+
+    public function approveSkill(string $skillId): void
+    {
+        DB::table('skills')->where('skill_id', $skillId)->update(['status' => 'approved']);
+        session()->flash('status', "Keahlian baru berhasil disetujui.");
+    }
+
+    public function rejectSkill(string $skillId): void
+    {
+        DB::table('skills')->where('skill_id', $skillId)->update(['status' => 'rejected']);
+        session()->flash('status', "Keahlian usulan berhasil ditolak.");
+    }
 }; ?>
 
 <div class="space-y-10 py-6">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">{{ __('Pusat Kontrol Administratif') }}</h1>
-            <p class="text-slate-500 text-sm mt-1">{{ __('Dashboard statistik utama, audit kegiatan, dan pengelolaan akun pengguna platform.') }}</p>
+            <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ __('Pusat Kontrol Administratif') }}</h1>
+            <p class="text-on-surface-variant text-sm mt-1">{{ __('Dashboard statistik utama, audit kegiatan, dan pengelolaan akun pengguna platform.') }}</p>
         </div>
     </div>
 
     <!-- Alert Status -->
     @if (session('status'))
-        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 text-sm flex items-center gap-2 shadow-sm">
-            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-surface-container border border-surface-dim text-on-surface rounded-xl p-4 text-sm flex items-center gap-2 shadow-sm">
+            <svg class="w-5 h-5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <span>{{ session('status') }}</span>
         </div>
     @endif
 
-    <!-- Statistics Section -->
-    <div class="space-y-6">
-        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path>
-            </svg>
-            {{ __('Statistik Platform') }}
+    <!-- 1. Platform Health Metrics (KPIs) -->
+    <div class="space-y-4">
+        <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
+            {{ __('Platform Health Metrics') }}
         </h2>
         
-        <!-- Platform Stats Grid -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
-                <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Students vs Orgs -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-5">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-surface-container text-primary rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <span class="text-xs font-bold text-outline-variant uppercase">PENGGUNA</span>
                 </div>
-                <div>
-                    <span class="text-xs text-slate-400 font-semibold block uppercase">{{ __('Mahasiswa') }}</span>
-                    <strong class="text-2xl text-slate-800">{{ User::where('role', 'student')->count() }}</strong>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
-                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-xs text-slate-400 font-semibold block uppercase">{{ __('Organisasi') }}</span>
-                    <strong class="text-2xl text-slate-800">{{ User::where('role', 'organization')->count() }}</strong>
+                <div class="flex items-end gap-2">
+                    <strong class="text-2xl text-on-surface">{{ User::where('role', 'student')->count() }}</strong>
+                    <span class="text-sm text-on-surface-variant mb-1">Mhs</span>
+                    <span class="text-outline-variant mb-1">|</span>
+                    <strong class="text-2xl text-on-surface">{{ User::where('role', 'organization')->count() }}</strong>
+                    <span class="text-sm text-on-surface-variant mb-1">Org</span>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
-                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
+            <!-- Active Events -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-5">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-surface-container text-primary rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <span class="text-xs font-bold text-outline-variant uppercase">EVENT AKTIF</span>
                 </div>
-                <div>
-                    <span class="text-xs text-slate-400 font-semibold block uppercase">{{ __('Event') }}</span>
-                    <strong class="text-2xl text-slate-800">{{ Event::count() }}</strong>
+                <div class="flex items-end gap-2">
+                    <strong class="text-2xl text-on-surface">{{ Event::where('is_official', true)->count() }}</strong>
+                    <span class="text-sm text-on-surface-variant mb-1">Resmi</span>
+                    <span class="text-outline-variant mb-1">|</span>
+                    <strong class="text-2xl text-on-surface">{{ Event::where('is_official', false)->count() }}</strong>
+                    <span class="text-sm text-on-surface-variant mb-1">Non-Resmi</span>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
-                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
+            <!-- Total Applications -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-5">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-surface-container text-primary rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <span class="text-xs font-bold text-outline-variant uppercase">APLIKASI DB</span>
                 </div>
-                <div>
-                    <span class="text-xs text-slate-400 font-semibold block uppercase">{{ __('Lowongan') }}</span>
-                    <strong class="text-2xl text-slate-800">{{ Vacancy::count() }}</strong>
+                <div class="flex items-end gap-2">
+                    <strong class="text-2xl text-on-surface">{{ VacancyApplication::count() }}</strong>
+                    <span class="text-sm text-on-surface-variant mb-1">Total Lamaran</span>
                 </div>
             </div>
-        </div>
 
-        <!-- Application Status Panel -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">{{ __('Status Lamaran Lowongan') }}</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
-                    <span class="text-xs font-semibold text-amber-600 uppercase block mb-1">Pending</span>
-                    <strong class="text-xl text-slate-800">{{ VacancyApplication::where('status', 'pending')->count() }}</strong>
+            <!-- Skills Approved vs Pending -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-5">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-surface-container text-primary rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    </div>
+                    <span class="text-xs font-bold text-outline-variant uppercase">DIREKTORI SKILL</span>
                 </div>
-                <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
-                    <span class="text-xs font-semibold text-blue-600 uppercase block mb-1">Interviewing</span>
-                    <strong class="text-xl text-slate-800">{{ VacancyApplication::where('status', 'interviewing')->count() }}</strong>
-                </div>
-                <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
-                    <span class="text-xs font-semibold text-emerald-600 uppercase block mb-1">Diterima</span>
-                    <strong class="text-xl text-slate-800">{{ VacancyApplication::where('status', 'accepted')->count() }}</strong>
-                </div>
-                <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
-                    <span class="text-xs font-semibold text-red-600 uppercase block mb-1">Ditolak</span>
-                    <strong class="text-xl text-slate-800">{{ VacancyApplication::where('status', 'rejected')->count() }}</strong>
+                <div class="flex items-end gap-2">
+                    <strong class="text-2xl text-on-surface">{{ Skill::where('status', 'approved')->count() }}</strong>
+                    <span class="text-sm text-on-surface-variant mb-1">Approv</span>
+                    <span class="text-outline-variant mb-1">|</span>
+                    <strong class="text-2xl text-on-surface">{{ Skill::where('status', 'pending')->count() }}</strong>
+                    <span class="text-sm text-on-surface-variant mb-1">Pending</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- User Management Section -->
+    <!-- 2 & 3 & 4. Vetting Queues -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Vetting Inbox (Organizations) -->
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    Vetting Inbox (Org)
+                </h3>
+                @php
+                    $pendingOrgsCount = DB::table('organization_profile')->where('verification_status', 'pending')->count();
+                @endphp
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
+                    {{ $pendingOrgsCount }} Pending
+                </span>
+            </div>
+            
+            <div class="divide-y divide-surface-dim">
+                @php
+                    $pendingOrgs = DB::table('organization_profile')
+                        ->join('users', 'users.user_id', '=', 'organization_profile.user_id')
+                        ->where('verification_status', 'pending')
+                        ->select('organization_profile.*', 'users.name')
+                        ->orderBy('organization_profile.created_at', 'asc')
+                        ->limit(5)
+                        ->get();
+                @endphp
+                
+                @forelse ($pendingOrgs as $org)
+                    <div class="py-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-bold text-on-surface">{{ $org->name }}</h4>
+                                <span class="text-xs text-primary font-semibold uppercase tracking-wider">{{ str_replace('_', ' ', $org->organization_level) }}</span>
+                            </div>
+                            <div class="text-xs text-outline-variant">{{ \Carbon\Carbon::parse($org->created_at)->diffForHumans() }}</div>
+                        </div>
+                        <p class="text-sm text-on-surface-variant line-clamp-2 mb-3">{{ $org->description ?? 'Tidak ada deskripsi.' }}</p>
+                        <div class="flex gap-2">
+                            <button wire:click="approveOrganization('{{ $org->organization_profile_id }}')" class="bg-primary hover:bg-primary-container text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">Approve</button>
+                            <button wire:click="rejectOrganization('{{ $org->organization_profile_id }}')" class="bg-surface-container hover:bg-surface-dim text-on-surface-variant text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">Reject</button>
+                        </div>
+                    </div>
+                @empty
+                    <div class="py-8 text-center text-outline-variant italic text-sm">
+                        Antrean verifikasi organisasi kosong.
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
+        <!-- Proposed Skills Moderation Inbox -->
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    Skills Moderation
+                </h3>
+                @php
+                    $pendingSkillsCount = Skill::where('status', 'pending')->count();
+                @endphp
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
+                    {{ $pendingSkillsCount }} Pending
+                </span>
+            </div>
+
+            <div class="divide-y divide-surface-dim">
+                @php
+                    $pendingSkills = Skill::where('status', 'pending')
+                        ->orderBy('created_at', 'asc')
+                        ->limit(5)
+                        ->get();
+                @endphp
+                
+                @forelse ($pendingSkills as $skill)
+                    <div class="py-4 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-on-surface">{{ $skill->skill_name }}</h4>
+                            <span class="text-xs text-outline-variant">Diusulkan {{ $skill->created_at->diffForHumans() }}</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button wire:click="approveSkill('{{ $skill->skill_id }}')" class="bg-primary hover:bg-primary-container text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">Approve</button>
+                            <button wire:click="rejectSkill('{{ $skill->skill_id }}')" class="bg-surface-container hover:bg-surface-dim text-on-surface-variant text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">Reject</button>
+                        </div>
+                    </div>
+                @empty
+                    <div class="py-8 text-center text-outline-variant italic text-sm">
+                        Antrean usulan keahlian kosong.
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Safety & Compliance Center -->
     <div class="space-y-6">
-        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+                <svg class="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                Safety & Compliance Center
+            </h2>
+            <a href="#userManagementSection" class="text-sm font-semibold text-primary hover:underline">Lihat Semua Pengguna</a>
+        </div>
+
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim overflow-hidden">
+            @php
+                $blockedUsers = User::whereNotNull('blocked_at')->orderByDesc('blocked_at')->limit(5)->get();
+            @endphp
+            @if ($blockedUsers->isEmpty())
+                <div class="p-8 text-center text-outline-variant italic text-sm">
+                    Kondisi aman. Tidak ada pengguna yang sedang diblokir.
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-error-container text-xs font-bold text-on-error-container uppercase tracking-wider">
+                                <th class="px-6 py-4 whitespace-nowrap">Pengguna Diblokir</th>
+                                <th class="px-6 py-4 whitespace-nowrap">Peran</th>
+                                <th class="px-6 py-4 whitespace-nowrap">Waktu Blokir</th>
+                                <th class="px-6 py-4 whitespace-nowrap">Alasan (Block Reason)</th>
+                                <th class="px-6 py-4 text-right whitespace-nowrap">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-surface-dim text-sm">
+                            @foreach ($blockedUsers as $bu)
+                                <tr class="hover:bg-surface-container-low transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="font-bold text-on-surface">{{ $bu->name }}</div>
+                                        <div class="text-xs text-outline-variant">{{ $bu->email }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold uppercase text-outline-variant">{{ $bu->role }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-xs text-on-surface-variant">{{ \Carbon\Carbon::parse($bu->blocked_at)->format('d M Y H:i') }}</td>
+                                    <td class="px-6 py-4 text-on-surface-variant text-sm max-w-xs truncate" title="{{ $bu->block_reason }}">{{ $bu->block_reason }}</td>
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                                        <button wire:click="unblockUser('{{ $bu->user_id }}')" class="text-xs font-semibold text-primary hover:underline">Buka Blokir</button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- User Management Section (Retained & Refined) -->
+    <div id="userManagementSection" class="space-y-6 pt-10 border-t border-surface-dim">
+        <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
             </svg>
-            {{ __('Manajemen Akun Pengguna') }}
+            {{ __('Daftar Seluruh Pengguna') }}
         </h2>
 
         <!-- Search and Filters -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div class="w-full md:flex-1 flex flex-col md:flex-row gap-4">
                 <input 
                     type="text" 
                     wire:model.live="search" 
                     placeholder="Cari berdasarkan nama, email, NIM, atau tingkat..." 
-                    class="w-full md:max-w-md border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full md:max-w-md border border-surface-dim rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 
                 <select 
                     wire:model.live="roleFilter" 
-                    class="w-full md:w-48 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full md:w-48 border border-surface-dim rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                     <option value="all">{{ __('Semua Peran') }}</option>
                     <option value="student">{{ __('Mahasiswa') }}</option>
@@ -206,11 +374,11 @@ new #[Layout('layouts.app')] class extends Component
                 </select>
             </div>
 
-            <label class="inline-flex items-center gap-2 text-sm text-slate-600 cursor-pointer self-start md:self-center">
+            <label class="inline-flex items-center gap-2 text-sm text-on-surface-variant cursor-pointer self-start md:self-center">
                 <input 
                     type="checkbox" 
                     wire:model.live="onlyBlocked" 
-                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                    class="rounded border-surface-dim text-primary focus:ring-primary w-4 h-4"
                 />
                 <span class="font-medium">{{ __('Hanya Pengguna Diblokir') }}</span>
             </label>
@@ -245,41 +413,41 @@ new #[Layout('layouts.app')] class extends Component
         @endphp
 
         <!-- Users Table Card -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim overflow-hidden">
             @if ($usersList->isEmpty())
-                <div class="p-12 text-center text-slate-450 italic">
+                <div class="p-12 text-center text-outline-variant italic">
                     {{ __('Tidak ada pengguna yang cocok dengan kriteria pencarian.') }}
                 </div>
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                <th class="px-6 py-4">{{ __('Nama & Email') }}</th>
-                                <th class="px-6 py-4">{{ __('Peran') }}</th>
-                                <th class="px-6 py-4">{{ __('Detail Profil') }}</th>
-                                <th class="px-6 py-4">{{ __('Tanggal Join') }}</th>
-                                <th class="px-6 py-4">{{ __('Status') }}</th>
-                                <th class="px-6 py-4 text-right">{{ __('Tindakan Pemblokiran') }}</th>
+                            <tr class="bg-surface-container border-b border-surface-dim text-xs font-bold text-on-surface uppercase tracking-wider">
+                                <th class="px-6 py-4 whitespace-nowrap">{{ __('Nama & Email') }}</th>
+                                <th class="px-6 py-4 whitespace-nowrap">{{ __('Peran') }}</th>
+                                <th class="px-6 py-4 whitespace-nowrap">{{ __('Detail Profil') }}</th>
+                                <th class="px-6 py-4 whitespace-nowrap">{{ __('Tanggal Join') }}</th>
+                                <th class="px-6 py-4 whitespace-nowrap">{{ __('Status') }}</th>
+                                <th class="px-6 py-4 text-right whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-sm">
+                        <tbody class="divide-y divide-surface-dim text-sm">
                             @foreach ($usersList as $u)
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-4">
-                                        <div class="font-bold text-slate-900">{{ $u->name }}</div>
-                                        <div class="text-xs text-slate-400">{{ $u->email }}</div>
+                                <tr class="hover:bg-surface-container-low transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="font-bold text-on-surface">{{ $u->name }}</div>
+                                        <div class="text-xs text-outline-variant">{{ $u->email }}</div>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase 
-                                            {{ $u->role === 'student' ? 'bg-blue-50 text-blue-700 border border-blue-100' : '' }}
-                                            {{ $u->role === 'organization' ? 'bg-purple-50 text-purple-700 border border-purple-100' : '' }}
-                                            {{ $u->role === 'admin' ? 'bg-slate-100 text-slate-800' : '' }}
+                                            {{ $u->role === 'student' ? 'bg-surface-container text-primary border border-primary-fixed-dim' : '' }}
+                                            {{ $u->role === 'organization' ? 'bg-secondary-container text-on-secondary-container border border-secondary-container' : '' }}
+                                            {{ $u->role === 'admin' ? 'bg-surface-container text-on-surface' : '' }}
                                         ">
                                             {{ $u->role }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-slate-600 font-medium">
+                                    <td class="px-6 py-4 text-on-surface-variant font-medium whitespace-nowrap">
                                         @if ($u->role === 'student')
                                             NIM: {{ $u->student_id ?: '-' }}
                                         @elseif ($u->role === 'organization')
@@ -288,183 +456,37 @@ new #[Layout('layouts.app')] class extends Component
                                             -
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-slate-500">
+                                    <td class="px-6 py-4 text-outline-variant whitespace-nowrap">
                                         {{ $u->created_at->format('d M Y') }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         @if ($u->blocked_at)
-                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-red-50 text-red-700 border border-red-100">
+                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-error-container text-error border border-error-container">
                                                 {{ __('Diblokir') }}
                                             </span>
-                                            <div class="text-[10px] text-red-500 mt-1 max-w-[200px] truncate" title="{{ $u->block_reason }}">
+                                            <div class="text-[10px] text-error mt-1 max-w-[200px] truncate" title="{{ $u->block_reason }}">
                                                 Alasan: {{ $u->block_reason }}
                                             </div>
                                         @else
-                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-surface-container text-on-surface-variant">
                                                 {{ __('Aktif') }}
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-right">
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
                                         @if ($u->blocked_at)
-                                            <button 
-                                                onclick="confirm('Buka blokir pengguna ini?') || event.stopImmediatePropagation()" 
-                                                wire:click="unblockUser('{{ $u->user_id }}')"
-                                                class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm"
-                                            >
+                                            <button wire:click="unblockUser('{{ $u->user_id }}')" class="text-sm font-semibold text-primary hover:underline">
                                                 {{ __('Aktifkan Kembali') }}
                                             </button>
-                                        @else
-                                            <form 
-                                                wire:submit.prevent="blockUser('{{ $u->user_id }}')" 
-                                                class="inline-flex gap-2 items-center"
-                                            >
-                                                <input 
-                                                    type="text" 
-                                                    wire:model="blockReasons.{{ $u->user_id }}" 
-                                                    placeholder="Tulis alasan..." 
-                                                    class="border border-slate-200 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-red-500" 
-                                                    required 
-                                                />
-                                                <button 
-                                                    type="submit"
-                                                    class="text-xs bg-red-600 hover:bg-red-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm"
-                                                >
+                                        @elseif ($u->role !== 'admin')
+                                            <div class="flex flex-col items-end gap-2">
+                                                <input type="text" wire:model="blockReasons.{{ $u->user_id }}" placeholder="Tulis alasan..." class="w-32 md:w-40 text-xs border border-surface-dim rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-error" />
+                                                <button wire:click="blockUser('{{ $u->user_id }}')" class="text-xs font-semibold bg-error text-white px-2 py-1 rounded hover:bg-error-container hover:text-error transition-colors">
                                                     {{ __('Blokir') }}
                                                 </button>
-                                            </form>
-                                            @error('blockReasons.' . $u->user_id)
-                                                <div class="text-[10px] text-red-500 mt-1 text-right">{{ $message }}</div>
-                                            @enderror
+                                            </div>
+                                            @error('blockReasons.'.$u->user_id) <span class="text-[10px] text-error block mt-1">{{ $message }}</span> @enderror
                                         @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <!-- Events Auditing Section -->
-    <div class="space-y-6">
-        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-            {{ __('Audit Event Kepanitiaan') }}
-        </h2>
-
-        @php
-            $eventsList = Event::orderBy('created_at', 'desc')->get();
-        @endphp
-
-        <!-- Events List Table -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            @if ($eventsList->isEmpty())
-                <div class="p-12 text-center text-slate-450 italic">
-                    {{ __('Tidak ada event yang terdaftar di platform.') }}
-                </div>
-            @else
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                <th class="px-6 py-4">{{ __('Nama Event') }}</th>
-                                <th class="px-6 py-4">{{ __('Tanggal Pelaksanaan') }}</th>
-                                <th class="px-6 py-4">{{ __('Sifat Event') }}</th>
-                                <th class="px-6 py-4 text-right">{{ __('Tindakan') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 text-sm">
-                            @foreach ($eventsList as $e)
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-4 font-bold text-slate-900">
-                                        {{ $e->event_name }}
-                                    </td>
-                                    <td class="px-6 py-4 text-slate-500">
-                                        {{ $e->event_date->format('d M Y') }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold 
-                                            {{ $e->is_official ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-100 text-slate-800' }}
-                                        ">
-                                            {{ $e->is_official ? __('Resmi Kampus') : __('Informal / Mahasiswa') }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <button 
-                                            onclick="confirm('Apakah Anda yakin ingin menghapus event ini secara permanen? Semua lowongan dan berkas lamaran terkait akan ikut terhapus.') || event.stopImmediatePropagation()" 
-                                            wire:click="deleteEvent('{{ $e->event_id }}')"
-                                            class="text-xs bg-red-600 hover:bg-red-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm"
-                                        >
-                                            {{ __('Hapus Event') }}
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <!-- Vacancies Auditing Section -->
-    <div class="space-y-6">
-        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-            </svg>
-            {{ __('Audit Lowongan Divisi') }}
-        </h2>
-
-        @php
-            $vacanciesList = Vacancy::with('event')->orderBy('created_at', 'desc')->get();
-        @endphp
-
-        <!-- Vacancies List Table -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            @if ($vacanciesList->isEmpty())
-                <div class="p-12 text-center text-slate-450 italic">
-                    {{ __('Tidak ada lowongan divisi yang terbit saat ini.') }}
-                </div>
-            @else
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                <th class="px-6 py-4">{{ __('Event') }}</th>
-                                <th class="px-6 py-4">{{ __('Divisi Kepanitiaan') }}</th>
-                                <th class="px-6 py-4">{{ __('Status Lowongan') }}</th>
-                                <th class="px-6 py-4 text-right">{{ __('Tindakan') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 text-sm">
-                            @foreach ($vacanciesList as $v)
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-4 font-bold text-slate-900">
-                                        {{ $v->event ? $v->event->event_name : '-' }}
-                                    </td>
-                                    <td class="px-6 py-4 text-slate-600 font-semibold">
-                                        {{ $v->division }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase 
-                                            {{ $v->status === 'OPEN' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100' }}
-                                        ">
-                                            {{ $v->status }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <button 
-                                            onclick="confirm('Apakah Anda yakin ingin menghapus lowongan divisi ini?') || event.stopImmediatePropagation()" 
-                                            wire:click="deleteVacancy('{{ $v->vacancy_id }}')"
-                                            class="text-xs bg-red-600 hover:bg-red-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm"
-                                        >
-                                            {{ __('Hapus Lowongan') }}
-                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
