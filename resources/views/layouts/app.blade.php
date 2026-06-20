@@ -6,6 +6,8 @@
 
     <title>@yield('title', 'COMMITIN')</title>
 
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
@@ -34,11 +36,8 @@
            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
         <!-- Logo -->
         <div class="h-16 flex items-center px-6 border-b border-gray-100 justify-between">
-            <a href="/" class="text-2xl font-bold text-blue-700 flex items-center gap-2">
-                <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-                CommitIn
+            <a href="/" class="flex items-center">
+                <x-application-logo class="h-8 w-auto text-blue-700 dark:text-blue-200" />
             </a>
             <!-- Mobile Close Button -->
             <button x-on:click="sidebarOpen = false" class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none">
