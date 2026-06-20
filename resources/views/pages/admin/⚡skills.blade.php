@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Models\Vacancy;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Illuminate\Support\Facades\DB;
 
 new #[Layout('layouts.app')] class extends Component
 {
@@ -21,6 +22,7 @@ new #[Layout('layouts.app')] class extends Component
     // Merge skills form
     public ?string $mergeSourceId = null;
     public ?string $mergeTargetId = null;
+    public bool $showMergePanel = false;
 
     public function mount(): void
     {
@@ -31,12 +33,14 @@ new #[Layout('layouts.app')] class extends Component
 
     public function createSkill(): void
     {
+        $this->newSkillName = trim($this->newSkillName);
+
         $validated = $this->validate([
             'newSkillName' => ['required', 'string', 'max:50', 'unique:skills,skill_name'],
         ]);
 
         Skill::create([
-            'skill_name' => trim($validated['newSkillName']),
+            'skill_name' => $validated['newSkillName'],
             'status' => 'approved',
         ]);
 
@@ -70,19 +74,19 @@ new #[Layout('layouts.app')] class extends Component
         $skill = Skill::findOrFail($id);
         $this->editingSkillId = $skill->skill_id;
         $this->editingSkillName = $skill->skill_name;
-        $this->dispatch('open-modal', 'edit-skill-modal');
     }
 
     public function updateSkill(): void
     {
+        $this->editingSkillName = trim($this->editingSkillName);
+
         $validated = $this->validate([
             'editingSkillName' => ['required', 'string', 'max:50', 'unique:skills,skill_name,' . $this->editingSkillId . ',skill_id'],
         ]);
 
         $skill = Skill::findOrFail($this->editingSkillId);
-        $skill->update(['skill_name' => trim($validated['editingSkillName'])]);
+        $skill->update(['skill_name' => $validated['editingSkillName']]);
 
-        $this->dispatch('close-modal', 'edit-skill-modal');
         $this->reset(['editingSkillId', 'editingSkillName']);
         session()->flash('status', 'Keahlian berhasil diperbarui!');
     }
@@ -94,43 +98,49 @@ new #[Layout('layouts.app')] class extends Component
             'mergeTargetId' => ['required', 'exists:skills,skill_id', 'different:mergeSourceId'],
         ]);
 
-        $source = Skill::findOrFail($validated['mergeSourceId']);
-        $target = Skill::findOrFail($validated['mergeTargetId']);
+        $sourceName = '';
+        $targetName = '';
 
-        // Merge users possessing the source skill
-        $sourceUsers = $source->users()->pluck('users.user_id')->toArray();
-        foreach ($sourceUsers as $userId) {
-            if (!$target->users()->where('users.user_id', $userId)->exists()) {
-                $target->users()->attach($userId);
+        DB::transaction(function () use ($validated, &$sourceName, &$targetName) {
+            $source = Skill::findOrFail($validated['mergeSourceId']);
+            $target = Skill::findOrFail($validated['mergeTargetId']);
+
+            // Merge users possessing the source skill
+            $sourceUsers = $source->users()->pluck('users.user_id')->toArray();
+            foreach ($sourceUsers as $userId) {
+                if (!$target->users()->where('users.user_id', $userId)->exists()) {
+                    $target->users()->attach($userId);
+                }
             }
-        }
-        $source->users()->detach();
+            $source->users()->detach();
 
-        // Merge vacancies requiring the source skill
-        $sourceVacancies = $source->vacancies()->pluck('vacancies.vacancy_id')->toArray();
-        foreach ($sourceVacancies as $vacancyId) {
-            if (!$target->vacancies()->where('vacancies.vacancy_id', $vacancyId)->exists()) {
-                $target->vacancies()->attach($vacancyId);
+            // Merge vacancies requiring the source skill
+            $sourceVacancies = $source->vacancies()->pluck('vacancies.vacancy_id')->toArray();
+            foreach ($sourceVacancies as $vacancyId) {
+                if (!$target->vacancies()->where('vacancies.vacancy_id', $vacancyId)->exists()) {
+                    $target->vacancies()->attach($vacancyId);
+                }
             }
-        }
-        $source->vacancies()->detach();
+            $source->vacancies()->detach();
 
-        $sourceName = $source->skill_name;
-        $source->delete();
+            $sourceName = $source->skill_name;
+            $targetName = $target->skill_name;
+            $source->delete();
+        });
 
-        $this->dispatch('close-modal', 'merge-skills-modal');
+        $this->showMergePanel = false;
         $this->reset(['mergeSourceId', 'mergeTargetId']);
-        session()->flash('status', "Keahlian \"{$sourceName}\" berhasil digabungkan ke dalam \"{$target->skill_name}\"!");
+        session()->flash('status', "Keahlian \"{$sourceName}\" berhasil digabungkan ke dalam \"{$targetName}\"!");
     }
 }; ?>
 
 @section('title', 'Moderasi Keahlian')
 
-<div>
+<div style="padding: 20px; font-family: sans-serif;">
     <!-- Status Toast Alert -->
     @if (session('status'))
-        <div class="mb-6 p-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
-            <span class="font-medium">{{ session('status') }}</span>
+        <div style="color: green; font-weight: bold; margin-bottom: 20px;">
+            {{ session('status') }}
         </div>
     @endif
 
@@ -141,222 +151,180 @@ new #[Layout('layouts.app')] class extends Component
         $allSkills = Skill::orderBy('skill_name')->get();
     @endphp
 
-    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
         <div>
-            <h2 class="text-2xl font-bold text-[#1e293b] mb-1">{{ __('Moderasi Keahlian') }}</h2>
-            <p class="text-gray-500 text-sm">{{ __('Kelola daftar keahlian/skill master, setujui usulan mahasiswa, atau gabungkan keahlian ganda.') }}</p>
+            <h2>Moderasi Keahlian</h2>
+            <p>Kelola daftar keahlian/skill master, setujui usulan mahasiswa, atau gabungkan keahlian ganda.</p>
         </div>
-        <button x-on:click="$dispatch('open-modal', 'merge-skills-modal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm shadow-indigo-100">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-            {{ __('Gabungkan Keahlian') }}
+        <button wire:click="$set('showMergePanel', true)">
+            Gabungkan Keahlian
         </button>
     </div>
 
-    <!-- Manual Add Skill Card -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-        <h3 class="text-md font-bold text-gray-900 mb-4">{{ __('Tambah Keahlian Master') }}</h3>
-        <form wire:submit.prevent="createSkill" class="flex flex-col sm:flex-row gap-3">
-            <div class="flex-1">
-                <x-text-input wire:model="newSkillName" placeholder="Masukkan nama keahlian baru (misal: Laravel 11)..." class="w-full text-sm" required />
-                <x-input-error :messages="$errors->get('newSkillName')" class="mt-1" />
+    <!-- MERGE SKILLS PANEL -->
+    @if ($showMergePanel)
+        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9;">
+            <h3>Gabungkan Keahlian</h3>
+            <p>Tindakan ini akan mengalihkan semua pengguna dan lowongan dari keahlian sumber ke keahlian target, lalu menghapus keahlian sumber secara permanen.</p>
+            <form wire:submit.prevent="mergeSkills">
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px;">Keahlian Sumber (Yang Akan Dihapus):</label>
+                    <select wire:model="mergeSourceId" required style="width: 100%; padding: 5px;">
+                        <option value="">-- Pilih Keahlian Sumber --</option>
+                        @foreach ($allSkills as $s)
+                            <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status }})</option>
+                        @endforeach
+                    </select>
+                    @error('mergeSourceId') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px;">Keahlian Target (Yang Akan Menyerap):</label>
+                    <select wire:model="mergeTargetId" required style="width: 100%; padding: 5px;">
+                        <option value="">-- Pilih Keahlian Target --</option>
+                        @foreach ($allSkills as $s)
+                            <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status }})</option>
+                        @endforeach
+                    </select>
+                    @error('mergeTargetId') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button type="button" wire:click="$set('showMergePanel', false)" style="margin-right: 10px;">Batal</button>
+                    <button type="submit">Gabungkan</button>
+                </div>
+            </form>
+        </div>
+    @endif
+
+    <!-- EDIT SKILL PANEL -->
+    @if ($editingSkillId)
+        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9;">
+            <h3>Ubah Nama Keahlian</h3>
+            <form wire:submit.prevent="updateSkill">
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px;">Nama Keahlian:</label>
+                    <input type="text" wire:model="editingSkillName" required style="width: 100%; padding: 5px; box-sizing: border-box;" />
+                    @error('editingSkillName') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button type="button" wire:click="$set('editingSkillId', null)" style="margin-right: 10px;">Batal</button>
+                    <button type="submit">Simpan</button>
+                </div>
+            </form>
+        </div>
+    @endif
+
+    <!-- Manual Add Skill Section -->
+    <div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 25px;">
+        <h3>Tambah Keahlian Master</h3>
+        <form wire:submit.prevent="createSkill" style="display: flex; gap: 10px; align-items: start;">
+            <div style="flex: 1;">
+                <input type="text" wire:model="newSkillName" placeholder="Masukkan nama keahlian baru..." required style="width: 100%; padding: 5px; box-sizing: border-box;" />
+                @error('newSkillName') <span style="color: red; display: block; margin-top: 5px;">{{ $message }}</span> @enderror
             </div>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shrink-0">
-                {{ __('Tambah Keahlian') }}
-            </button>
+            <button type="submit">Tambah Keahlian</button>
         </form>
     </div>
 
     <!-- Tabs switcher -->
-    <div class="border-b border-gray-200 dark:border-gray-700 mb-6 flex gap-6">
-        <button wire:click="$set('activeTab', 'pending')" class="pb-3 text-sm font-semibold border-b-2 transition-colors relative {{ $activeTab === 'pending' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-            {{ __('Perlu Persetujuan') }}
-            <span class="ml-1.5 bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">{{ $pendingSkills->count() }}</span>
+    <div style="margin-bottom: 20px; display: flex; gap: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+        <button wire:click="$set('activeTab', 'pending')" style="font-weight: {{ $activeTab === 'pending' ? 'bold' : 'normal' }}; cursor: pointer; background: none; border: none; padding: 0;">
+            Perlu Persetujuan ({{ $pendingSkills->count() }})
         </button>
-        <button wire:click="$set('activeTab', 'approved')" class="pb-3 text-sm font-semibold border-b-2 transition-colors relative {{ $activeTab === 'approved' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-            {{ __('Telah Disetujui') }}
-            <span class="ml-1.5 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-bold">{{ $approvedSkills->count() }}</span>
+        <button wire:click="$set('activeTab', 'approved')" style="font-weight: {{ $activeTab === 'approved' ? 'bold' : 'normal' }}; cursor: pointer; background: none; border: none; padding: 0;">
+            Telah Disetujui ({{ $approvedSkills->count() }})
         </button>
-        <button wire:click="$set('activeTab', 'rejected')" class="pb-3 text-sm font-semibold border-b-2 transition-colors relative {{ $activeTab === 'rejected' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-            {{ __('Ditolak') }}
-            <span class="ml-1.5 bg-red-50 text-red-700 px-2 py-0.5 rounded-full text-xs font-bold">{{ $rejectedSkills->count() }}</span>
+        <button wire:click="$set('activeTab', 'rejected')" style="font-weight: {{ $activeTab === 'rejected' ? 'bold' : 'normal' }}; cursor: pointer; background: none; border: none; padding: 0;">
+            Ditolak ({{ $rejectedSkills->count() }})
         </button>
     </div>
 
     <!-- Lists Body -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
-            @if ($activeTab === 'pending')
-                @if ($pendingSkills->isEmpty())
-                    <p class="p-8 text-center text-sm text-gray-500 italic">{{ __('Tidak ada usulan keahlian baru yang menunggu persetujuan.') }}</p>
-                @else
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-gray-100">
-                                <th class="px-6 py-4 font-semibold">{{ __('Nama Keahlian') }}</th>
-                                <th class="px-6 py-4 font-semibold">{{ __('Diusulkan Pada') }}</th>
-                                <th class="px-6 py-4 font-semibold text-right">{{ __('Tindakan') }}</th>
+    <div>
+        @if ($activeTab === 'pending')
+            @if ($pendingSkills->isEmpty())
+                <p style="font-style: italic;">Tidak ada usulan keahlian baru yang menunggu persetujuan.</p>
+            @else
+                <table border="1" cellpadding="8" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th>Nama Keahlian</th>
+                            <th>Diusulkan Pada</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($pendingSkills as $skill)
+                            <tr>
+                                <td>{{ $skill->skill_name }}</td>
+                                <td>{{ $skill->created_at->format('d M Y H:i') }}</td>
+                                <td>
+                                    <button wire:click="approveSkill('{{ $skill->skill_id }}')" style="margin-right: 5px;">Setujui</button>
+                                    <button wire:click="rejectSkill('{{ $skill->skill_id }}')" style="margin-right: 5px;">Tolak</button>
+                                    <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')">Hapus</button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 text-sm">
-                            @foreach ($pendingSkills as $skill)
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-medium text-gray-900">{{ $skill->skill_name }}</td>
-                                    <td class="px-6 py-4 text-gray-500">{{ $skill->created_at->format('d M Y H:i') }}</td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex justify-end gap-2">
-                                            <button wire:click="approveSkill('{{ $skill->skill_id }}')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
-                                                {{ __('Setujui') }}
-                                            </button>
-                                            <button wire:click="rejectSkill('{{ $skill->skill_id }}')" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
-                                                {{ __('Tolak') }}
-                                            </button>
-                                            <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')" class="text-red-500 hover:text-red-700 p-1.5">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
-            @elseif ($activeTab === 'approved')
-                @if ($approvedSkills->isEmpty())
-                    <p class="p-8 text-center text-sm text-gray-500 italic">{{ __('Tidak ada keahlian terdaftar.') }}</p>
-                @else
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-gray-100">
-                                <th class="px-6 py-4 font-semibold">{{ __('Nama Keahlian') }}</th>
-                                <th class="px-6 py-4 font-semibold">{{ __('Jumlah Pengguna') }}</th>
-                                <th class="px-6 py-4 font-semibold">{{ __('Dibutuhkan Vacancy') }}</th>
-                                <th class="px-6 py-4 font-semibold text-right">{{ __('Tindakan') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 text-sm">
-                            @foreach ($approvedSkills as $skill)
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-medium text-gray-900">{{ $skill->skill_name }}</td>
-                                    <td class="px-6 py-4 text-gray-500">{{ $skill->users_count }}</td>
-                                    <td class="px-6 py-4 text-gray-500">{{ $skill->vacancies_count }}</td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex justify-end gap-2">
-                                            <button wire:click="startEdit('{{ $skill->skill_id }}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
-                                                {{ __('Edit') }}
-                                            </button>
-                                            <button wire:click="rejectSkill('{{ $skill->skill_id }}')" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
-                                                {{ __('Tolak') }}
-                                            </button>
-                                            <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')" class="text-red-500 hover:text-red-700 p-1.5">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
-            @elseif ($activeTab === 'rejected')
-                @if ($rejectedSkills->isEmpty())
-                    <p class="p-8 text-center text-sm text-gray-500 italic">{{ __('Tidak ada keahlian ditolak.') }}</p>
-                @else
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-gray-100">
-                                <th class="px-6 py-4 font-semibold">{{ __('Nama Keahlian') }}</th>
-                                <th class="px-6 py-4 font-semibold">{{ __('Ditolak Pada') }}</th>
-                                <th class="px-6 py-4 font-semibold text-right">{{ __('Tindakan') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 text-sm">
-                            @foreach ($rejectedSkills as $skill)
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-medium text-gray-900">{{ $skill->skill_name }}</td>
-                                    <td class="px-6 py-4 text-gray-500">{{ $skill->updated_at->format('d M Y H:i') }}</td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex justify-end gap-2">
-                                            <button wire:click="approveSkill('{{ $skill->skill_id }}')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
-                                                {{ __('Setujui') }}
-                                            </button>
-                                            <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')" class="text-red-500 hover:text-red-700 p-1.5">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
+                        @endforeach
+                    </tbody>
+                </table>
             @endif
-        </div>
+        @elseif ($activeTab === 'approved')
+            @if ($approvedSkills->isEmpty())
+                <p style="font-style: italic;">Tidak ada keahlian terdaftar.</p>
+            @else
+                <table border="1" cellpadding="8" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th>Nama Keahlian</th>
+                            <th>Jumlah Pengguna</th>
+                            <th>Dibutuhkan Vacancy</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($approvedSkills as $skill)
+                            <tr>
+                                <td>{{ $skill->skill_name }}</td>
+                                <td>{{ $skill->users_count }}</td>
+                                <td>{{ $skill->vacancies_count }}</td>
+                                <td>
+                                    <button wire:click="startEdit('{{ $skill->skill_id }}')" style="margin-right: 5px;">Edit</button>
+                                    <button wire:click="rejectSkill('{{ $skill->skill_id }}')" style="margin-right: 5px;">Tolak</button>
+                                    <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')">Hapus</button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+        @elseif ($activeTab === 'rejected')
+            @if ($rejectedSkills->isEmpty())
+                <p style="font-style: italic;">Tidak ada keahlian ditolak.</p>
+            @else
+                <table border="1" cellpadding="8" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th>Nama Keahlian</th>
+                            <th>Ditolak Pada</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($rejectedSkills as $skill)
+                            <tr>
+                                <td>{{ $skill->skill_name }}</td>
+                                <td>{{ $skill->updated_at->format('d M Y H:i') }}</td>
+                                <td>
+                                    <button wire:click="approveSkill('{{ $skill->skill_id }}')" style="margin-right: 5px;">Setujui</button>
+                                    <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')">Hapus</button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+        @endif
     </div>
-
-    <!-- RENAME/EDIT SKILL MODAL -->
-    <x-modal name="edit-skill-modal">
-        <form wire:submit.prevent="updateSkill" class="p-6">
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                {{ __('Ubah Nama Keahlian') }}
-            </h2>
-
-            <div class="mt-4">
-                <x-input-label for="edit_skill_name" :value="__('Nama Keahlian')" />
-                <x-text-input wire:model="editingSkillName" id="edit_skill_name" class="block mt-1 w-full" type="text" required />
-                <x-input-error :messages="$errors->get('editingSkillName')" class="mt-2" />
-            </div>
-
-            <div class="mt-6 flex justify-end gap-3">
-                <x-secondary-button x-on:click="$dispatch('close-modal', 'edit-skill-modal')">
-                    {{ __('Batal') }}
-                </x-secondary-button>
-                <x-primary-button>
-                    {{ __('Simpan') }}
-                </x-primary-button>
-            </div>
-        </form>
-    </x-modal>
-
-    <!-- MERGE SKILLS MODAL -->
-    <x-modal name="merge-skills-modal">
-        <form wire:submit.prevent="mergeSkills" class="p-6">
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                {{ __('Gabungkan Keahlian') }}
-            </h2>
-            <p class="text-sm text-gray-500 mb-4">
-                {{ __('Tindakan ini akan mengalihkan semua pengguna dan lowongan dari keahlian sumber ke keahlian target, lalu menghapus keahlian sumber secara permanen.') }}
-            </p>
-
-            <div class="mt-4">
-                <x-input-label for="merge_source" :value="__('Keahlian Sumber (Yang Akan Dihapus)')" />
-                <select wire:model="mergeSourceId" id="merge_source" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 text-sm" required>
-                    <option value="">-- Pilih Keahlian Sumber --</option>
-                    @foreach ($allSkills as $s)
-                        <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status }})</option>
-                    @endforeach
-                </select>
-                <x-input-error :messages="$errors->get('mergeSourceId')" class="mt-2" />
-            </div>
-
-            <div class="mt-4">
-                <x-input-label for="merge_target" :value="__('Keahlian Target (Yang Akan Menyerap)')" />
-                <select wire:model="mergeTargetId" id="merge_target" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 text-sm" required>
-                    <option value="">-- Pilih Keahlian Target --</option>
-                    @foreach ($allSkills as $s)
-                        <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status }})</option>
-                    @endforeach
-                </select>
-                <x-input-error :messages="$errors->get('mergeTargetId')" class="mt-2" />
-            </div>
-
-            <div class="mt-6 flex justify-end gap-3">
-                <x-secondary-button x-on:click="$dispatch('close-modal', 'merge-skills-modal')">
-                    {{ __('Batal') }}
-                </x-secondary-button>
-                <x-primary-button class="bg-indigo-600 hover:bg-indigo-700">
-                    {{ __('Gabungkan') }}
-                </x-primary-button>
-            </div>
-        </form>
-    </x-modal>
 </div>
