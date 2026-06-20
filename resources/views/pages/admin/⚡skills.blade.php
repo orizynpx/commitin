@@ -257,7 +257,7 @@ new #[Layout('layouts.app')] class extends Component
                     </thead>
                     <tbody>
                         @foreach ($pendingSkills as $skill)
-                            <tr>
+                            <tr wire:key="{{ $skill->skill_id }}">
                                 <td>{{ $skill->skill_name }}</td>
                                 <td>{{ $skill->created_at->format('d M Y H:i') }}</td>
                                 <td>
@@ -285,7 +285,7 @@ new #[Layout('layouts.app')] class extends Component
                     </thead>
                     <tbody>
                         @foreach ($approvedSkills as $skill)
-                            <tr>
+                            <tr wire:key="{{ $skill->skill_id }}">
                                 <td>{{ $skill->skill_name }}</td>
                                 <td>{{ $skill->users_count }}</td>
                                 <td>{{ $skill->vacancies_count }}</td>
@@ -313,7 +313,7 @@ new #[Layout('layouts.app')] class extends Component
                     </thead>
                     <tbody>
                         @foreach ($rejectedSkills as $skill)
-                            <tr>
+                            <tr wire:key="{{ $skill->skill_id }}">
                                 <td>{{ $skill->skill_name }}</td>
                                 <td>{{ $skill->updated_at->format('d M Y H:i') }}</td>
                                 <td>

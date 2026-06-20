@@ -153,7 +153,7 @@ new #[Layout('layouts.app')] class extends Component
                     <p class="text-xs text-gray-500">Buka berkas di tab baru untuk meninjau kualifikasi pelamar.</p>
                 </div>
                 <a 
-                    href="{{ $application->file_url }}" 
+                    href="{{ route('applications.download', $application) }}" 
                     target="_blank" 
                     class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2.5 rounded-lg transition-colors inline-flex items-center gap-1.5"
                 >

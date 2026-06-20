@@ -171,7 +171,7 @@ new #[Layout('layouts.app')] class extends Component
                         @endif
 
                         <div class="text-center pt-2">
-                            <a href="{{ $existingApp->file_url }}" target="_blank" class="text-xs text-blue-600 hover:underline">
+                            <a href="{{ route('applications.download', $existingApp) }}" target="_blank" class="text-xs text-blue-600 hover:underline">
                                 Lihat Dokumen Lamaran Anda &nearr;
                             </a>
                         </div>
