@@ -36,12 +36,20 @@ new #[Layout('layouts.app')] class extends Component
     }
 }; ?>
 
-<div>
-    <h1>{{ __('Persetujuan Akun Organisasi (Ormawa)') }}</h1>
+<div class="space-y-8 py-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">{{ __('Persetujuan Akun Organisasi (Ormawa)') }}</h1>
+        <p class="text-slate-500 text-sm mt-1">{{ __('Verifikasi dan tinjau pendaftaran ormawa baru sebelum mereka dapat mempublikasikan event.') }}</p>
+    </div>
 
+    <!-- Alert status -->
     @if (session('status'))
-        <div style="border: 1px solid green; padding: 10px; margin-bottom: 20px; background-color: #e6ffe6; color: green;">
-            {{ session('status') }}
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 text-sm flex items-center gap-2 shadow-sm">
+            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>{{ session('status') }}</span>
         </div>
     @endif
 
@@ -52,46 +60,99 @@ new #[Layout('layouts.app')] class extends Component
             ->get();
     @endphp
 
-    @if ($pendingProfiles->isEmpty())
-        <p><em>{{ __('Tidak ada pendaftaran organisasi yang memerlukan persetujuan.') }}</em></p>
-    @else
-        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; text-align: left;">
-            <thead>
-                <tr>
-                    <th>{{ __('Nama Organisasi') }}</th>
-                    <th>{{ __('Email') }}</th>
-                    <th>{{ __('Tingkat') }}</th>
-                    <th>{{ __('Tanggal Daftar') }}</th>
-                    <th>{{ __('Deskripsi') }}</th>
-                    <th>{{ __('Tindakan') }}</th>
-                </tr>
-            </thead>
-            <tbody>
+    <!-- Vetting Desk List -->
+    <div class="space-y-4">
+        @if ($pendingProfiles->isEmpty())
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
+                <svg class="w-16 h-16 text-slate-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h3 class="text-lg font-bold text-slate-900 mb-1">{{ __('Semua Bersih!') }}</h3>
+                <p class="text-slate-500 text-sm">{{ __('Tidak ada pendaftaran organisasi baru yang memerlukan persetujuan saat ini.') }}</p>
+            </div>
+        @else
+            <div class="grid grid-cols-1 gap-6">
                 @foreach ($pendingProfiles as $profile)
                     @if ($profile->user)
-                        <tr>
-                            <td>{{ $profile->user->name }}</td>
-                            <td>{{ $profile->user->email }}</td>
-                            <td>{{ ucfirst(str_replace('_', ' ', $profile->organization_level)) }}</td>
-                            <td>{{ $profile->created_at->format('d M Y H:i') }}</td>
-                            <td>
-                                <details>
-                                    <summary>{{ __('Lihat Deskripsi') }}</summary>
-                                    <p>{{ $profile->description ?: 'Tidak ada deskripsi.' }}</p>
-                                </details>
-                            </td>
-                            <td>
-                                <button wire:click="approve('{{ $profile->organization_profile_id }}')">
-                                    {{ __('Setujui') }}
-                                </button>
-                                <button onclick="confirm('Apakah Anda yakin ingin menolak dan menghapus akun organisasi ini?') || event.stopImmediatePropagation()" wire:click="reject('{{ $profile->user_id }}')">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col justify-between" x-data="{ expanded: false }">
+                            <!-- Card Header -->
+                            <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-50 bg-slate-50/20">
+                                <div class="flex items-center gap-4">
+                                    <!-- Avatar initials -->
+                                    <img 
+                                        src="https://ui-avatars.com/api/?name={{ urlencode($profile->user->name) }}&background=6366f1&color=fff&size=48&bold=true" 
+                                        alt="{{ $profile->user->name }}" 
+                                        class="w-12 h-12 rounded-xl border border-indigo-100 object-cover flex-shrink-0"
+                                    />
+                                    <div>
+                                        <h3 class="text-lg font-bold text-slate-900 leading-snug">{{ $profile->user->name }}</h3>
+                                        <p class="text-xs text-slate-400 mt-0.5">{{ $profile->user->email }} &bull; Terdaftar pada {{ $profile->created_at->format('d M Y H:i') }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Organization Level Badges -->
+                                <div class="flex items-center gap-2">
+                                    @php
+                                        $level = $profile->organization_level;
+                                        $badgeClasses = '';
+                                        if ($level === 'study_program') {
+                                            $badgeClasses = 'bg-purple-50 text-purple-700 border border-purple-100';
+                                            $levelLabel = 'Himpunan Prodi';
+                                        } elseif ($level === 'faculty') {
+                                            $badgeClasses = 'bg-blue-50 text-blue-700 border border-blue-100';
+                                            $levelLabel = 'BEM / DPM Fakultas';
+                                        } else {
+                                            $badgeClasses = 'bg-green-50 text-green-700 border border-green-100';
+                                            $levelLabel = 'UKM / Ormawa Universitas';
+                                        }
+                                    @endphp
+                                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider {{ $badgeClasses }}">
+                                        {{ $levelLabel }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Description/Profile details section -->
+                            <div class="p-6 space-y-4">
+                                <div class="text-sm font-semibold text-slate-700">{{ __('Deskripsi & Profil Kegiatan:') }}</div>
+                                <div 
+                                    class="bg-slate-50 rounded-xl p-4 text-sm text-slate-600 leading-relaxed transition-all duration-300"
+                                    :class="expanded ? '' : 'line-clamp-2'"
+                                >
+                                    {{ $profile->description ?: 'Tidak ada deskripsi profil ormawa.' }}
+                                </div>
+                                
+                                @if (strlen($profile->description) > 150)
+                                    <button 
+                                        type="button" 
+                                        @click="expanded = !expanded" 
+                                        class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold focus:outline-none flex items-center gap-1"
+                                    >
+                                        <span x-text="expanded ? 'Sembunyikan Deskripsi' : 'Baca Selengkapnya'"></span>
+                                    </button>
+                                @endif
+                            </div>
+
+                            <!-- Card Actions -->
+                            <div class="p-6 border-t border-slate-50 bg-slate-50/10 flex justify-end gap-3">
+                                <button 
+                                    onclick="confirm('Apakah Anda yakin ingin menolak dan menghapus akun organisasi ini?') || event.stopImmediatePropagation()" 
+                                    wire:click="reject('{{ $profile->user_id }}')"
+                                    class="bg-white hover:bg-red-50 text-red-600 border border-slate-200 hover:border-red-200 px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors"
+                                >
                                     {{ __('Tolak & Hapus') }}
                                 </button>
-                            </td>
-                        </tr>
+                                <button 
+                                    wire:click="approve('{{ $profile->organization_profile_id }}')"
+                                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-semibold transition-colors shadow-sm shadow-emerald-100"
+                                >
+                                    {{ __('Setujui Pendaftaran') }}
+                                </button>
+                            </div>
+                        </div>
                     @endif
                 @endforeach
-            </tbody>
-        </table>
-    @endif
+            </div>
+        @endif
+    </div>
 </div>
