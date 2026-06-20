@@ -12,9 +12,9 @@ new #[Layout('layouts.app')] class extends Component
     public string $event_date = '';
     public bool $is_official = false;
 
-    public function mount(string $event): void
+    public function mount(Event $event): void
     {
-        $this->event = auth()->user()->events()->findOrFail($event);
+        $this->event = $event;
         
         $myPivot = $this->event->organizers()->where('users.user_id', auth()->id())->first()?->pivot;
         if (!$myPivot || !in_array($myPivot->organizer_role, ['creator', 'owner'])) {

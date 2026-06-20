@@ -14,12 +14,15 @@ new #[Layout('layouts.app')] class extends Component
     public string $status = 'OPEN';
     public array $selectedSkills = [];
 
-    public function mount(string $vacancy): void
+    public function mount(Vacancy $vacancy): void
     {
         // Must ensure the vacancy belongs to an event created by the current organization user
-        $this->vacancy = Vacancy::whereHas('event.organizers', function($q) {
-            $q->where('event_organizers.user_id', auth()->id());
-        })->with('skills')->findOrFail($vacancy);
+        $hasAccess = $vacancy->event->organizers()->where('users.user_id', auth()->id())->exists();
+        if (!$hasAccess) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $this->vacancy = $vacancy->loadMissing('skills');
 
         $this->division = $this->vacancy->division;
         $this->vacancy_description = $this->vacancy->vacancy_description;

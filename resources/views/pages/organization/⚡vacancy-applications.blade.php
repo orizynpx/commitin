@@ -9,11 +9,14 @@ new #[Layout('layouts.app')] class extends Component
 {
     public Vacancy $vacancy;
 
-    public function mount(string $vacancy): void
+    public function mount(Vacancy $vacancy): void
     {
-        $this->vacancy = Vacancy::whereHas('event.organizers', function($q) {
-            $q->where('event_organizers.user_id', auth()->id());
-        })->with('event')->findOrFail($vacancy);
+        $hasAccess = $vacancy->event->organizers()->where('users.user_id', auth()->id())->exists();
+        if (!$hasAccess) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $this->vacancy = $vacancy->loadMissing('event');
     }
 
     public function render()

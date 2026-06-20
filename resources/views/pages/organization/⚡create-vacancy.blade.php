@@ -15,9 +15,13 @@ new #[Layout('layouts.app')] class extends Component
     public string $status = 'OPEN';
     public array $selectedSkills = [];
 
-    public function mount(string $event): void
+    public function mount(Event $event): void
     {
-        $this->event = auth()->user()->events()->findOrFail($event);
+        $hasAccess = $event->organizers()->where('users.user_id', auth()->id())->exists();
+        if (!$hasAccess) {
+            abort(403, 'Unauthorized.');
+        }
+        $this->event = $event;
     }
 
     public function store()

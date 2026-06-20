@@ -15,11 +15,14 @@ new #[Layout('layouts.app')] class extends Component
     public string $interview_location = '';
     public string $feedback = '';
 
-    public function mount(string $application): void
+    public function mount(VacancyApplication $application): void
     {
-        $this->application = VacancyApplication::whereHas('vacancy.event.organizers', function($q) {
-            $q->where('event_organizers.user_id', auth()->id());
-        })->with(['vacancy.event', 'user.studentProfile', 'user.skills', 'user.experiences'])->findOrFail($application);
+        $hasAccess = $application->vacancy->event->organizers()->where('users.user_id', auth()->id())->exists();
+        if (!$hasAccess) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $this->application = $application->loadMissing(['vacancy.event', 'user.studentProfile', 'user.skills', 'user.experiences']);
 
         $this->status = $this->application->status;
         $this->interview_scheduled_at = $this->application->interview_scheduled_at ? $this->application->interview_scheduled_at->format('Y-m-d\TH:i') : '';
@@ -134,7 +137,6 @@ new #[Layout('layouts.app')] class extends Component
                         @forelse($application->user->experiences as $exp)
                             <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 text-xs">
                                 <div class="font-bold text-gray-900 mb-0.5">{{ $exp->title }}</div>
-                                <div class="text-gray-400 mb-2">Diperbarui {{ $exp->updated_at->format('d M Y') }}</div>
                                 <p class="text-gray-600 leading-normal">{{ $exp->description }}</p>
                             </div>
                         @empty
