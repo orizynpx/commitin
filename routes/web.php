@@ -58,7 +58,7 @@ Route::middleware(['auth', 'role:student,organization'])->prefix('organizer')->n
         Route::livewire('vacancies/{vacancy}/edit', 'pages::organization.edit-vacancy')->name('vacancies.edit');
 
         // Collaborators / Event Team
-        Route::livewire('events/{event}/team', 'pages::organization.team')->name('events.team');
+        Route::livewire('events/{event}/team', 'pages::organization.event-team')->name('events.team');
 
         // Recruitment Desk / Candidate Applications
         Route::livewire('applications', 'pages::organization.applications-index')->name('applications.index');
