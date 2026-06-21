@@ -14,9 +14,8 @@ new #[Layout('layouts.app')] class extends Component
     public string $editingSkillName = '';
     public string $editingSkillStatus = 'approved';
 
-    public ?string $mergeSourceId = null;
-    public ?string $mergeTargetId = null;
-    public bool $showMergePanel = false;
+    public string $sortColumn = 'updated_at';
+    public string $sortDirection = 'desc';
 
     public function mount(): void
     {
@@ -63,7 +62,7 @@ new #[Layout('layouts.app')] class extends Component
 
         $validated = $this->validate([
             'editingSkillName' => ['required', 'string', 'max:50', 'unique:skills,skill_name,' . $this->editingSkillId . ',skill_id'],
-            'editingSkillStatus' => ['required', 'in:approved,pending,rejected'],
+            'editingSkillStatus' => ['required', 'in:approved,pending'],
         ]);
 
         $skill = Skill::findOrFail($this->editingSkillId);
@@ -76,44 +75,14 @@ new #[Layout('layouts.app')] class extends Component
         session()->flash('status', 'Keahlian berhasil diperbarui!');
     }
 
-    public function mergeSkills(): void
+    public function sortBy(string $column): void
     {
-        $validated = $this->validate([
-            'mergeSourceId' => ['required', 'exists:skills,skill_id'],
-            'mergeTargetId' => ['required', 'exists:skills,skill_id', 'different:mergeSourceId'],
-        ]);
-
-        $sourceName = '';
-        $targetName = '';
-
-        DB::transaction(function () use ($validated, &$sourceName, &$targetName) {
-            $source = Skill::findOrFail($validated['mergeSourceId']);
-            $target = Skill::findOrFail($validated['mergeTargetId']);
-
-            $sourceUsers = $source->users()->pluck('users.user_id')->toArray();
-            foreach ($sourceUsers as $userId) {
-                if (!$target->users()->where('users.user_id', $userId)->exists()) {
-                    $target->users()->attach($userId);
-                }
-            }
-            $source->users()->detach();
-
-            $sourceVacancies = $source->vacancies()->pluck('vacancies.vacancy_id')->toArray();
-            foreach ($sourceVacancies as $vacancyId) {
-                if (!$target->vacancies()->where('vacancies.vacancy_id', $vacancyId)->exists()) {
-                    $target->vacancies()->attach($vacancyId);
-                }
-            }
-            $source->vacancies()->detach();
-
-            $sourceName = $source->skill_name;
-            $targetName = $target->skill_name;
-            $source->delete();
-        });
-
-        $this->showMergePanel = false;
-        $this->reset(['mergeSourceId', 'mergeTargetId']);
-        session()->flash('status', "Keahlian \"{$sourceName}\" berhasil digabungkan ke dalam \"{$targetName}\"!");
+        if ($this->sortColumn === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortColumn = $column;
+            $this->sortDirection = 'desc';
+        }
     }
 }; ?>
 
@@ -123,12 +92,8 @@ new #[Layout('layouts.app')] class extends Component
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ __('Manajemen Keahlian') }}</h1>
-            <p class="text-outline-variant text-sm mt-1">{{ __('Kelola daftar keahlian master, perbarui status keahlian, atau gabungkan keahlian ganda.') }}</p>
+            <p class="text-outline-variant text-sm mt-1">{{ __('Kelola daftar keahlian master, perbarui status keahlian, atau moderasi usulan keahlian baru.') }}</p>
         </div>
-        <button wire:click="$set('showMergePanel', true)" class="bg-surface-container text-on-surface border border-surface-dim hover:bg-surface-container-low px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-            Gabungkan Keahlian
-        </button>
     </div>
 
     @if (session('status'))
@@ -137,41 +102,6 @@ new #[Layout('layouts.app')] class extends Component
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <span class="font-medium">{{ session('status') }}</span>
-        </div>
-    @endif
-
-    @if ($showMergePanel)
-        <div class="bg-surface-container-lowest border border-surface-dim rounded-2xl p-6 shadow-sm">
-            <h3 class="text-lg font-bold text-on-surface mb-2">Gabungkan Keahlian</h3>
-            <p class="text-sm text-outline-variant mb-6">Tindakan ini akan mengalihkan semua pengguna dan lowongan dari keahlian sumber ke keahlian target, lalu menghapus keahlian sumber secara permanen.</p>
-            <form wire:submit.prevent="mergeSkills" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-on-surface mb-1">Keahlian Sumber (Yang Akan Dihapus):</label>
-                    <select wire:model="mergeSourceId" required class="w-full border border-surface-dim rounded-xl px-4 py-2.5 text-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="">-- Pilih Keahlian Sumber --</option>
-                        @foreach (\App\Models\Skill::orderBy('skill_name')->get() as $s)
-                            <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status === 'approved' ? 'Disetujui' : ($s->status === 'pending' ? 'Tertunda' : 'Ditolak') }})</option>
-                        @endforeach
-                    </select>
-                    @error('mergeSourceId') <span class="text-xs text-error mt-1 block">{{ $message }}</span> @enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-on-surface mb-1">Keahlian Target (Yang Akan Menyerap):</label>
-                    <select wire:model="mergeTargetId" required class="w-full border border-surface-dim rounded-xl px-4 py-2.5 text-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="">-- Pilih Keahlian Target --</option>
-                        @foreach (\App\Models\Skill::orderBy('skill_name')->get() as $s)
-                            <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status === 'approved' ? 'Disetujui' : ($s->status === 'pending' ? 'Tertunda' : 'Ditolak') }})</option>
-                        @endforeach
-                    </select>
-                    @error('mergeTargetId') <span class="text-xs text-error mt-1 block">{{ $message }}</span> @enderror
-                </div>
-
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" wire:click="$set('showMergePanel', false)" class="px-5 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-surface-container rounded-xl transition-colors">Batal</button>
-                    <button type="submit" class="bg-primary text-white hover:bg-primary-container hover:text-on-primary-container px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">Gabungkan</button>
-                </div>
-            </form>
         </div>
     @endif
 
@@ -190,7 +120,6 @@ new #[Layout('layouts.app')] class extends Component
                     <select wire:model="editingSkillStatus" required class="w-full border border-surface-dim rounded-xl px-4 py-2.5 text-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary">
                         <option value="approved">Disetujui (Approved)</option>
                         <option value="pending">Tertunda (Pending)</option>
-                        <option value="rejected">Ditolak (Rejected)</option>
                     </select>
                     @error('editingSkillStatus') <span class="text-xs text-error mt-1 block">{{ $message }}</span> @enderror
                 </div>
@@ -229,63 +158,146 @@ new #[Layout('layouts.app')] class extends Component
     </div>
 
     @php
-        $skillsQuery = Skill::query()
+        $baseQuery = \App\Models\Skill::query()
             ->withCount(['users', 'vacancies']);
 
         if (!empty($this->search)) {
-            $skillsQuery->where('skill_name', 'like', '%' . $this->search . '%');
+            $baseQuery->where('skill_name', 'like', '%' . $this->search . '%');
         }
 
-        $skillsList = $skillsQuery->orderBy('skill_name')->get();
+        $sortCol = $this->sortColumn;
+        if (!in_array($sortCol, ['skill_name', 'users_count', 'vacancies_count', 'updated_at'])) {
+            $sortCol = 'updated_at';
+        }
+        $sortDir = $this->sortDirection === 'asc' ? 'asc' : 'desc';
+
+        $baseQuery->orderBy($sortCol, $sortDir);
+
+        $pendingSkills = (clone $baseQuery)->where('status', 'pending')->get();
+        $approvedSkills = (clone $baseQuery)->where('status', 'approved')->get();
     @endphp
 
-    <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim overflow-hidden">
-        @if ($skillsList->isEmpty())
-            <div class="p-12 text-center text-outline-variant italic">
-                Tidak ada keahlian terdaftar.
-            </div>
-        @else
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-surface-container border-b border-surface-dim text-xs font-bold text-on-surface uppercase tracking-wider">
-                            <th class="px-6 py-4 whitespace-nowrap">Nama Keahlian</th>
-                            <th class="px-6 py-4 whitespace-nowrap">Status</th>
-                            <th class="px-6 py-4 whitespace-nowrap">Jumlah Pengguna</th>
-                            <th class="px-6 py-4 whitespace-nowrap">Dibutuhkan Lowongan</th>
-                            <th class="px-6 py-4 text-right whitespace-nowrap">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-surface-dim">
-                        @foreach ($skillsList as $skill)
-                            <tr wire:key="{{ $skill->skill_id }}" class="hover:bg-surface-container-low transition-colors">
-                                <td class="px-6 py-4 font-bold text-on-surface whitespace-nowrap">{{ $skill->skill_name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase 
-                                        {{ $skill->status === 'approved' ? 'bg-surface-container text-primary border border-primary-fixed-dim' : '' }}
-                                        {{ $skill->status === 'pending' ? 'bg-secondary-container text-on-secondary-container border border-secondary-container' : '' }}
-                                        {{ $skill->status === 'rejected' ? 'bg-surface-container text-on-surface' : '' }}
-                                    ">
-                                        {{ $skill->status === 'approved' ? 'Disetujui' : ($skill->status === 'pending' ? 'Tertunda' : 'Ditolak') }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-outline-variant whitespace-nowrap">
-                                    {{ $skill->users_count }}
-                                </td>
-                                <td class="px-6 py-4 text-outline-variant whitespace-nowrap">
-                                    {{ $skill->vacancies_count }}
-                                </td>
-                                <td class="px-6 py-4 text-right whitespace-nowrap">
-                                    <div class="flex justify-end gap-2">
-                                        <button wire:click="startEdit('{{ $skill->skill_id }}')" class="bg-surface-container hover:bg-primary hover:text-white text-on-surface-variant px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Edit</button>
-                                        <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')" class="bg-error-container hover:bg-error hover:text-on-error text-on-error-container px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Hapus</button>
-                                    </div>
-                                </td>
+    <div class="space-y-6">
+        <h2 class="text-xl font-bold text-on-surface">Usulan Tertunda (Pending Skills)</h2>
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim overflow-hidden">
+            @if ($pendingSkills->isEmpty())
+                <div class="p-12 text-center text-outline-variant italic text-sm">
+                    Tidak ada usulan keahlian tertunda.
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-surface-container border-b border-surface-dim text-xs font-bold text-on-surface uppercase tracking-wider">
+                                <th class="px-6 py-4 whitespace-nowrap cursor-pointer select-none" wire:click="sortBy('skill_name')">
+                                    Nama Keahlian
+                                    @if ($sortColumn === 'skill_name') {{ $sortDirection === 'asc' ? '▲' : '▼' }} @endif
+                                </th>
+                                <th class="px-6 py-4 whitespace-nowrap cursor-pointer select-none" wire:click="sortBy('users_count')">
+                                    Jumlah Pengguna
+                                    @if ($sortColumn === 'users_count') {{ $sortDirection === 'asc' ? '▲' : '▼' }} @endif
+                                </th>
+                                <th class="px-6 py-4 whitespace-nowrap cursor-pointer select-none" wire:click="sortBy('vacancies_count')">
+                                    Dibutuhkan Lowongan
+                                    @if ($sortColumn === 'vacancies_count') {{ $sortDirection === 'asc' ? '▲' : '▼' }} @endif
+                                </th>
+                                <th class="px-6 py-4 whitespace-nowrap cursor-pointer select-none" wire:click="sortBy('updated_at')">
+                                    Terakhir Diperbarui
+                                    @if ($sortColumn === 'updated_at') {{ $sortDirection === 'asc' ? '▲' : '▼' }} @endif
+                                </th>
+                                <th class="px-6 py-4 text-right whitespace-nowrap">Aksi</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
+                        </thead>
+                        <tbody class="divide-y divide-surface-dim">
+                            @foreach ($pendingSkills as $skill)
+                                <tr wire:key="pending-{{ $skill->skill_id }}" class="hover:bg-surface-container-low transition-colors">
+                                    <td class="px-6 py-4 font-bold text-on-surface whitespace-nowrap">{{ $skill->skill_name }}</td>
+                                    <td class="px-6 py-4 text-outline-variant whitespace-nowrap">{{ $skill->users_count }}</td>
+                                    <td class="px-6 py-4 text-outline-variant whitespace-nowrap">{{ $skill->vacancies_count }}</td>
+                                    <td class="px-6 py-4 text-outline-variant whitespace-nowrap">{{ $skill->updated_at->format('d M Y H:i') }}</td>
+                                    <td class="px-6 py-4 text-right whitespace-nowrap relative">
+                                        <div x-data="{ open: false }" class="relative inline-block text-left">
+                                            <button @click="open = !open" class="text-gray-500 hover:text-gray-700 focus:outline-none text-xl font-bold px-2">
+                                                &#8942;
+                                            </button>
+                                            <div x-show="open" @click.away="open = false" style="display: none;" class="absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-surface-container-lowest ring-1 ring-black ring-opacity-5 z-20 p-2 border border-surface-dim text-left">
+                                                <button wire:click="startEdit('{{ $skill->skill_id }}')" @click="open = false" class="block w-full text-left px-4 py-2 text-xs hover:bg-surface-container-low text-on-surface">
+                                                    Edit
+                                                </button>
+                                                <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')" @click="open = false" class="block w-full text-left px-4 py-2 text-xs hover:bg-surface-container-low text-error">
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <h2 class="text-xl font-bold text-on-surface">Keahlian Disetujui (Approved Skills)</h2>
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim overflow-hidden">
+            @if ($approvedSkills->isEmpty())
+                <div class="p-12 text-center text-outline-variant italic text-sm">
+                    Tidak ada keahlian disetujui.
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-surface-container border-b border-surface-dim text-xs font-bold text-on-surface uppercase tracking-wider">
+                                <th class="px-6 py-4 whitespace-nowrap cursor-pointer select-none" wire:click="sortBy('skill_name')">
+                                    Nama Keahlian
+                                    @if ($sortColumn === 'skill_name') {{ $sortDirection === 'asc' ? '▲' : '▼' }} @endif
+                                </th>
+                                <th class="px-6 py-4 whitespace-nowrap cursor-pointer select-none" wire:click="sortBy('users_count')">
+                                    Jumlah Pengguna
+                                    @if ($sortColumn === 'users_count') {{ $sortDirection === 'asc' ? '▲' : '▼' }} @endif
+                                </th>
+                                <th class="px-6 py-4 whitespace-nowrap cursor-pointer select-none" wire:click="sortBy('vacancies_count')">
+                                    Dibutuhkan Lowongan
+                                    @if ($sortColumn === 'vacancies_count') {{ $sortDirection === 'asc' ? '▲' : '▼' }} @endif
+                                </th>
+                                <th class="px-6 py-4 whitespace-nowrap cursor-pointer select-none" wire:click="sortBy('updated_at')">
+                                    Terakhir Diperbarui
+                                    @if ($sortColumn === 'updated_at') {{ $sortDirection === 'asc' ? '▲' : '▼' }} @endif
+                                </th>
+                                <th class="px-6 py-4 text-right whitespace-nowrap">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-surface-dim">
+                            @foreach ($approvedSkills as $skill)
+                                <tr wire:key="approved-{{ $skill->skill_id }}" class="hover:bg-surface-container-low transition-colors">
+                                    <td class="px-6 py-4 font-bold text-on-surface whitespace-nowrap">{{ $skill->skill_name }}</td>
+                                    <td class="px-6 py-4 text-outline-variant whitespace-nowrap">{{ $skill->users_count }}</td>
+                                    <td class="px-6 py-4 text-outline-variant whitespace-nowrap">{{ $skill->vacancies_count }}</td>
+                                    <td class="px-6 py-4 text-outline-variant whitespace-nowrap">{{ $skill->updated_at->format('d M Y H:i') }}</td>
+                                    <td class="px-6 py-4 text-right whitespace-nowrap relative">
+                                        <div x-data="{ open: false }" class="relative inline-block text-left">
+                                            <button @click="open = !open" class="text-gray-500 hover:text-gray-700 focus:outline-none text-xl font-bold px-2">
+                                                &#8942;
+                                            </button>
+                                            <div x-show="open" @click.away="open = false" style="display: none;" class="absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-surface-container-lowest ring-1 ring-black ring-opacity-5 z-20 p-2 border border-surface-dim text-left">
+                                                <button wire:click="startEdit('{{ $skill->skill_id }}')" @click="open = false" class="block w-full text-left px-4 py-2 text-xs hover:bg-surface-container-low text-on-surface">
+                                                    Edit
+                                                </button>
+                                                <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')" @click="open = false" class="block w-full text-left px-4 py-2 text-xs hover:bg-surface-container-low text-error">
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
     </div>
 </div>
