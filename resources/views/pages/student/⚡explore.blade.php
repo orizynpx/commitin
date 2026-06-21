@@ -8,7 +8,7 @@ use App\Models\Skill;
 new #[Layout('layouts.app')] class extends Component
 {
     public $search = '';
-    public $selectedSkill = '';
+    public array $selectedSkills = [];
 
     public function render()
     {
@@ -26,9 +26,13 @@ new #[Layout('layouts.app')] class extends Component
             });
         }
 
-        if (!empty($this->selectedSkill)) {
-            $query->whereHas('skills', function($q) {
-                $q->where('skills.skill_id', $this->selectedSkill);
+        if (!empty($this->selectedSkills)) {
+            $query->where(function($q) {
+                foreach($this->selectedSkills as $skillId) {
+                    $q->whereHas('skills', function($sq) use ($skillId) {
+                        $sq->where('skills.skill_id', $skillId);
+                    });
+                }
             });
         }
 
@@ -46,7 +50,6 @@ new #[Layout('layouts.app')] class extends Component
 
         return view('pages.student.⚡explore', [
             'vacancies' => $vacancies,
-            'skills' => Skill::where('status', 'approved')->get(),
         ]);
     }
 }; ?>
@@ -57,27 +60,19 @@ new #[Layout('layouts.app')] class extends Component
         <p class="text-on-surface-variant">{{ __('Cari dan temukan lowongan panitia yang sesuai dengan keahlian Anda.') }}</p>
     </div>
 
-    <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-6 mb-8 flex flex-col md:flex-row gap-4">
+    <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-6 mb-8 flex flex-col md:flex-row gap-6">
         <div class="flex-1">
             <label class="block text-xs font-semibold text-outline-variant uppercase mb-2">Cari Divisi atau Kegiatan</label>
             <input 
                 type="text" 
                 wire:model.live="search" 
                 placeholder="Cari berdasarkan divisi (misal: Dokumentasi) atau nama event..." 
-                class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface-container-lowest"
             />
         </div>
-        <div class="w-full md:w-64">
+        <div class="w-full md:w-80">
             <label class="block text-xs font-semibold text-outline-variant uppercase mb-2">Filter Keahlian</label>
-            <select 
-                wire:model.live="selectedSkill" 
-                class="w-full border border-surface-dim rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-                <option value="">Semua Keahlian</option>
-                @foreach($skills as $skill)
-                    <option value="{{ $skill->skill_id }}">{{ $skill->skill_name }}</option>
-                @endforeach
-            </select>
+            <livewire:⚡skill-selector wire:model.live="selectedSkills" :allowSuggest="false" />
         </div>
     </div>
 
@@ -90,7 +85,6 @@ new #[Layout('layouts.app')] class extends Component
                 $creatorName = $creator ? $creator->name : 'N/A';
             @endphp
             <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative">
-
                 <div>
                     <span class="text-xs font-semibold uppercase tracking-wider text-primary mb-1 block">
                         {{ $vacancy->event->event_name }} (Penyelenggara: {{ $creatorName }})

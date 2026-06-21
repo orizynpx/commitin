@@ -16,7 +16,6 @@ new #[Layout('layouts.app')] class extends Component
 
     public function mount(Vacancy $vacancy): void
     {
-        // Must ensure the vacancy belongs to an event created by the current organization user
         $hasAccess = $vacancy->event->organizers()->where('users.user_id', auth()->id())->exists();
         if (!$hasAccess) {
             abort(403, 'Unauthorized.');
@@ -110,19 +109,7 @@ new #[Layout('layouts.app')] class extends Component
 
             <div>
                 <label class="block text-sm font-semibold text-on-surface-variant mb-2">Keahlian Yang Disyaratkan</label>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-surface-dim rounded-lg p-4 bg-surface-container-low">
-                    @foreach(App\Models\Skill::all() as $skill)
-                        <label class="inline-flex items-center text-sm text-on-surface-variant">
-                            <input 
-                                type="checkbox" 
-                                wire:model="selectedSkills" 
-                                value="{{ $skill->skill_id }}" 
-                                class="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary mr-2"
-                            />
-                            {{ $skill->skill_name }}
-                        </label>
-                    @endforeach
-                </div>
+                <livewire:⚡skill-selector wire:model="selectedSkills" />
                 @error('selectedSkills')
                     <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror

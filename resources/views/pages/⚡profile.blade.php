@@ -34,8 +34,7 @@ new #[Layout('layouts.app')] class extends Component
     public string $experienceTitle = '';
     public string $experienceDescription = '';
 
-    public string $skillInput = '';
-    public string $suggestedSkillName = '';
+    public array $selectedSkills = [];
 
     public function mount(): void
     {
@@ -57,6 +56,7 @@ new #[Layout('layouts.app')] class extends Component
                 $this->entry_year = $profile->entry_year;
                 $this->bio = $profile->bio;
             }
+            $this->selectedSkills = $user->skills->pluck('skill_id')->toArray();
         } elseif ($this->role === 'organization') {
             $profile = $user->organizationProfile;
             if ($profile) {
@@ -69,9 +69,13 @@ new #[Layout('layouts.app')] class extends Component
 
     public function render()
     {
-        return view('pages.⚡profile', [
-            'approvedSkills' => Skill::where('status', 'approved')->get(),
-        ]);
+        return view('pages.⚡profile');
+    }
+
+    public function updatedSelectedSkills($value): void
+    {
+        Auth::user()->skills()->sync($value);
+        session()->flash('status', 'Keahlian berhasil diperbarui!');
     }
 
     public function updateProfile(): void
@@ -206,63 +210,6 @@ new #[Layout('layouts.app')] class extends Component
         }
         $exp->delete();
         session()->flash('status', 'Pengalaman berhasil dihapus!');
-    }
-
-    public function addSkill(): void
-    {
-        $validated = $this->validate([
-            'skillInput' => ['required', 'string', 'max:50'],
-        ]);
-
-        $skillName = trim($validated['skillInput']);
-        if (empty($skillName)) {
-            return;
-        }
-
-        $skill = Skill::where('skill_name', $skillName)->where('status', 'approved')->first();
-
-        if (!$skill) {
-            session()->flash('error', 'Keahlian tidak ditemukan atau belum disetujui. Silakan gunakan tombol Usulkan Keahlian Baru.');
-            return;
-        }
-
-        $user = Auth::user();
-        if (!$user->skills()->where('skills.skill_id', $skill->skill_id)->exists()) {
-            $user->skills()->attach($skill->skill_id);
-        }
-
-        $this->skillInput = '';
-        session()->flash('status', 'Keahlian berhasil ditambahkan!');
-    }
-
-    public function removeSkill(string $skillId): void
-    {
-        Auth::user()->skills()->detach($skillId);
-        session()->flash('status', 'Keahlian berhasil dihapus!');
-    }
-
-    public function openSuggestSkillModal(): void
-    {
-        $this->suggestedSkillName = '';
-        $this->dispatch('open-modal', 'suggest-skill-modal');
-    }
-
-    public function suggestSkill(): void
-    {
-        $validated = $this->validate([
-            'suggestedSkillName' => ['required', 'string', 'max:50', 'unique:skills,skill_name'],
-        ], [
-            'suggestedSkillName.unique' => 'Keahlian ini sudah terdaftar.',
-        ]);
-
-        Skill::create([
-            'skill_name' => trim($validated['suggestedSkillName']),
-            'status' => 'pending',
-        ]);
-
-        $this->dispatch('close-modal', 'suggest-skill-modal');
-        $this->suggestedSkillName = '';
-        session()->flash('status', 'Usulan keahlian baru berhasil diajukan dan menunggu persetujuan admin!');
     }
 }
 ?>
@@ -481,33 +428,7 @@ new #[Layout('layouts.app')] class extends Component
                             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                             Keahlian Saya
                         </h3>
-
-                        <button type="button" wire:click="openSuggestSkillModal" class="text-xs text-primary hover:underline mb-4 block">Usulkan Keahlian Baru</button>
-
-                        <form wire:submit.prevent="addSkill" class="mb-4 flex gap-2">
-                            <input list="skills-datalist" wire:model="skillInput" placeholder="Tambah keahlian (misal: Figma)..." class="flex-1 text-sm px-3 py-1.5 border border-surface-dim rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-surface-container-lowest" />
-                            <datalist id="skills-datalist">
-                                @foreach($approvedSkills as $s)
-                                    <option value="{{ $s->skill_name }}"></option>
-                                @endforeach
-                            </datalist>
-                            <button type="submit" class="bg-primary text-white hover:bg-primary-container px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors">
-                                {{ __('Tambah') }}
-                            </button>
-                        </form>
-                        
-                        @if (Auth::user()->skills->isEmpty())
-                            <p class="text-sm text-outline italic">{{ __('Belum mengisi keahlian.') }}</p>
-                        @else
-                            <div class="flex flex-wrap gap-2">
-                                @foreach (Auth::user()->skills as $skill)
-                                    <span class="bg-surface-container border border-surface-dim text-on-surface px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1.5">
-                                        {{ $skill->skill_name }}
-                                        <button wire:click="removeSkill('{{ $skill->skill_id }}')" class="text-error hover:text-error-container font-black focus:outline-none ml-1">&times;</button>
-                                    </span>
-                                @endforeach
-                            </div>
-                        @endif
+                        <livewire:⚡skill-selector wire:model="selectedSkills" />
                     </div>
                 </div>
             </div>
@@ -521,9 +442,6 @@ new #[Layout('layouts.app')] class extends Component
                     <p class="text-on-surface-variant leading-relaxed text-sm whitespace-pre-line">
                         {{ $description ?: 'Belum ada deskripsi organisasi. Silakan klik tombol Edit Profil untuk menambahkannya.' }}
                     </p>
-                    <div class="mt-6 pt-6 border-t border-surface-dim">
-                        <button type="button" wire:click="openSuggestSkillModal" class="bg-surface-container border border-surface-dim hover:bg-surface-dim text-on-surface-variant text-xs font-bold px-4 py-2 rounded-lg transition-colors">Usulkan Keahlian Baru</button>
-                    </div>
                 </div>
             </div>
         @endif
@@ -559,30 +477,6 @@ new #[Layout('layouts.app')] class extends Component
 
                     <x-primary-button>
                         {{ __('Simpan') }}
-                    </x-primary-button>
-                </div>
-            </form>
-        </x-modal>
-
-        <x-modal name="suggest-skill-modal">
-            <form wire:submit.prevent="suggestSkill" class="p-6">
-                <h2 class="text-lg font-medium text-on-surface dark:text-gray-100">
-                    Usulkan Keahlian Baru
-                </h2>
-
-                <div class="mt-4">
-                    <x-input-label for="suggested_skill_name" :value="__('Nama Keahlian')" />
-                    <x-text-input wire:model="suggestedSkillName" id="suggested_skill_name" placeholder="Misal: Python" class="block mt-1 w-full" type="text" required />
-                    <x-input-error :messages="$errors->get('suggestedSkillName')" class="mt-2" />
-                </div>
-
-                <div class="mt-6 flex justify-end gap-3">
-                    <x-secondary-button x-on:click="$dispatch('close-modal', 'suggest-skill-modal')">
-                        {{ __('Batal') }}
-                    </x-secondary-button>
-
-                    <x-primary-button>
-                        {{ __('Usulkan') }}
                     </x-primary-button>
                 </div>
             </form>
