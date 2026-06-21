@@ -72,7 +72,7 @@ new #[Layout('layouts.app')] class extends Component
         </div>
         <div class="w-full md:w-80">
             <label class="block text-xs font-semibold text-outline-variant uppercase mb-2">Filter Keahlian</label>
-            <livewire:⚡skill-selector wire:model.live="selectedSkills" :allowSuggest="false" />
+            <livewire:is component="⚡skill-selector" wire:model.live="selectedSkills" :allowSuggest="false" />
         </div>
     </div>
 

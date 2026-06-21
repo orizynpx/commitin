@@ -109,7 +109,7 @@ new #[Layout('layouts.app')] class extends Component
 
             <div>
                 <label class="block text-sm font-semibold text-on-surface-variant mb-2">Keahlian Yang Disyaratkan</label>
-                <livewire:⚡skill-selector wire:model="selectedSkills" />
+                <livewire:is component="⚡skill-selector" wire:model="selectedSkills" />
                 @error('selectedSkills')
                     <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror
