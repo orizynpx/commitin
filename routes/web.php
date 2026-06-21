@@ -88,6 +88,11 @@ Route::get('attachments/{attachment}/download', function (\App\Models\DocumentAt
         return \Illuminate\Support\Facades\Storage::disk('public')->download($path, $attachment->file_name);
     }
 
+    $publicPath = public_path($fileUrl);
+    if (file_exists($publicPath)) {
+        return response()->download($publicPath, $attachment->file_name);
+    }
+
     abort(404, 'File not found.');
 })->name('attachments.download')->middleware(['auth']);
 
@@ -118,6 +123,11 @@ Route::get('applications/{application}/download', function (\App\Models\VacancyA
 
     if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
         return \Illuminate\Support\Facades\Storage::disk('public')->download($path, $fileName);
+    }
+
+    $publicPath = public_path($fileUrl);
+    if (file_exists($publicPath)) {
+        return response()->download($publicPath, $fileName);
     }
 
     abort(404, 'File not found.');
