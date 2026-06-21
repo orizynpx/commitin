@@ -13,14 +13,24 @@ new #[Layout('layouts.app')] class extends Component
 
     public Vacancy $vacancy;
     public $file;
+    public bool $isOrganizer = false;
 
     public function mount(Vacancy $vacancy): void
     {
         $this->vacancy = $vacancy->loadMissing(['event.organizers', 'skills']);
+        $this->isOrganizer = \Illuminate\Support\Facades\DB::table('event_organizers')
+            ->where('event_id', $this->vacancy->event_id)
+            ->where('user_id', auth()->id())
+            ->exists();
     }
 
     public function apply()
     {
+        if ($this->isOrganizer) {
+            session()->flash('error', 'Penyelenggara atau pengelola kegiatan tidak diperbolehkan melamar ke lowongan kegiatan mereka sendiri.');
+            return;
+        }
+
         $this->validate([
             'file' => 'required|file|mimes:pdf|max:10240',
         ]);
@@ -170,11 +180,13 @@ new #[Layout('layouts.app')] class extends Component
                             </div>
                         @endif
 
-                        <div class="text-center pt-2">
-                            <a href="{{ route('applications.download', $existingApp) }}" target="_blank" class="text-xs text-primary hover:underline">
-                                Lihat Dokumen Lamaran Anda &nearr;
-                            </a>
-                        </div>
+                        @if(!empty($existingApp->file_url))
+                            <div class="text-center pt-2">
+                                <a href="{{ route('applications.download', $existingApp) }}" target="_blank" class="text-xs text-primary hover:underline">
+                                    Lihat Dokumen Lamaran Anda &nearr;
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 @elseif($vacancy->status !== 'OPEN')
                     <div class="text-center py-6">
@@ -183,33 +195,42 @@ new #[Layout('layouts.app')] class extends Component
                         <p class="text-xs text-outline-variant">Lowongan kepanitiaan ini sudah ditutup dan tidak menerima lamaran baru.</p>
                     </div>
                 @else
-                    <h3 class="text-lg font-bold text-on-surface mb-4">Kirim Lamaran</h3>
-                    <form wire:submit.prevent="apply" class="space-y-4">
+                    @if($isOrganizer)
                         <div>
-                            <label class="block text-xs font-semibold text-on-surface-variant uppercase mb-2">Unggah CV/Portofolio (PDF)</label>
-                            <input 
-                                type="file" 
-                                wire:model="file" 
-                                class="w-full border border-surface-dim rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('file') border-red-500 @enderror"
-                            />
-                            <div wire:loading wire:target="file" class="text-xs text-blue-500 mt-1">
-                                Sedang mengunggah berkas...
-                            </div>
-                            @error('file')
-                                <span class="text-xs text-error block mt-1">{{ $message }}</span>
-                            @enderror
-                            <p class="text-[10px] text-outline-variant mt-1 leading-normal">
-                                Unggah berkas resume/portfolio Anda dalam format PDF dengan ukuran maksimal 10MB.
-                            </p>
+                            <p class="text-sm text-error mb-4">Penyelenggara atau pengelola kegiatan tidak diperbolehkan melamar ke lowongan kegiatan mereka sendiri.</p>
+                            <button type="button" disabled class="w-full bg-gray-300 text-gray-500 font-semibold py-2.5 rounded-lg text-sm cursor-not-allowed">
+                                Kirim Lamaran Sekarang
+                            </button>
                         </div>
+                    @else
+                        <h3 class="text-lg font-bold text-on-surface mb-4">Kirim Lamaran</h3>
+                        <form wire:submit.prevent="apply" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-on-surface-variant mb-2">Unggah CV/Portofolio (PDF)</label>
+                                <input 
+                                    type="file" 
+                                    wire:model="file" 
+                                    class="w-full border border-surface-dim rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('file') border-red-500 @enderror"
+                                />
+                                <div wire:loading wire:target="file" class="text-xs text-blue-500 mt-1">
+                                    Sedang mengunggah berkas...
+                                </div>
+                                @error('file')
+                                    <span class="text-xs text-error block mt-1">{{ $message }}</span>
+                                @enderror
+                                <p class="text-[10px] text-outline-variant mt-1 leading-normal">
+                                    Unggah berkas resume/portfolio Anda dalam format PDF dengan ukuran maksimal 10MB.
+                                </p>
+                            </div>
 
-                        <button 
-                            type="submit" 
-                            class="w-full bg-primary hover:bg-primary-container text-white font-semibold py-2.5 rounded-lg text-sm transition-colors shadow-sm"
-                        >
-                            Kirim Lamaran Sekarang
-                        </button>
-                    </form>
+                            <button 
+                                type="submit" 
+                                class="w-full bg-primary hover:bg-primary-container text-white font-semibold py-2.5 rounded-lg text-sm transition-colors shadow-sm"
+                            >
+                                Kirim Lamaran Sekarang
+                            </button>
+                        </form>
+                    @endif
                 @endif
             </div>
         </div>

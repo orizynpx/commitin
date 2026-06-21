@@ -81,4 +81,32 @@ class VacancyManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertSeeLivewire('⚡skill-selector');
     }
+
+    public function test_organizer_cannot_apply_to_own_event(): void
+    {
+        $org = User::factory()->create(['role' => 'student']);
+
+        $event = Event::forceCreate([
+            'event_id' => (string) \Illuminate\Support\Str::ulid(),
+            'event_name' => 'Tech Summit 2026',
+            'description' => 'A tech summit event',
+            'event_date' => now()->addDays(10),
+            'is_official' => true,
+        ]);
+
+        $event->organizers()->attach($org->user_id, ['organizer_role' => 'creator']);
+
+        $vacancy = Vacancy::forceCreate([
+            'vacancy_id' => (string) \Illuminate\Support\Str::ulid(),
+            'event_id' => $event->event_id,
+            'division' => 'Web Developer',
+            'vacancy_description' => 'Build websites',
+            'status' => 'OPEN',
+        ]);
+
+        $response = $this->actingAs($org)->get(route('vacancies.show', $vacancy->vacancy_id));
+
+        $response->assertStatus(200);
+        $response->assertSee('Penyelenggara atau pengelola kegiatan tidak diperbolehkan melamar ke lowongan kegiatan mereka sendiri.');
+    }
 }
