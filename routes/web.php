@@ -61,8 +61,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::livewire('users', 'pages::admin.users')->name('users');
 });
 
-Route::get('applications/{application}/download', function (\App\Models\VacancyApplication $application) {
+Route::get('attachments/{attachment}/download', function (\App\Models\DocumentAttachment $attachment) {
     $user = auth()->user();
+    $application = $attachment->vacancyApplication;
     $isOwner = $application->user_id === $user->user_id;
     $isOrganizer = $application->vacancy->event->organizers()->where('users.user_id', $user->user_id)->exists();
     $isAdmin = $user->role === 'admin';
@@ -71,7 +72,7 @@ Route::get('applications/{application}/download', function (\App\Models\VacancyA
         abort(403, 'Unauthorized.');
     }
 
-    $fileUrl = $application->file_url;
+    $fileUrl = $attachment->file_url;
     if (empty($fileUrl)) {
         abort(404, 'File not found.');
     }
@@ -84,7 +85,39 @@ Route::get('applications/{application}/download', function (\App\Models\VacancyA
     }
 
     if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
-        return \Illuminate\Support\Facades\Storage::disk('public')->download($path);
+        return \Illuminate\Support\Facades\Storage::disk('public')->download($path, $attachment->file_name);
+    }
+
+    abort(404, 'File not found.');
+})->name('attachments.download')->middleware(['auth']);
+
+Route::get('applications/{application}/download', function (\App\Models\VacancyApplication $application) {
+    $user = auth()->user();
+    $isOwner = $application->user_id === $user->user_id;
+    $isOrganizer = $application->vacancy->event->organizers()->where('users.user_id', $user->user_id)->exists();
+    $isAdmin = $user->role === 'admin';
+
+    if (!$isOwner && !$isOrganizer && !$isAdmin) {
+        abort(403, 'Unauthorized.');
+    }
+
+    $attachment = $application->attachments()->first();
+    $fileUrl = $attachment ? $attachment->file_url : $application->file_url;
+    $fileName = $attachment ? $attachment->file_name : null;
+
+    if (empty($fileUrl)) {
+        abort(404, 'File not found.');
+    }
+
+    $path = $fileUrl;
+    if (\Illuminate\Support\Str::startsWith($path, '/storage/')) {
+        $path = \Illuminate\Support\Str::after($path, '/storage/');
+    } elseif (\Illuminate\Support\Str::startsWith($path, 'storage/')) {
+        $path = \Illuminate\Support\Str::after($path, 'storage/');
+    }
+
+    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+        return \Illuminate\Support\Facades\Storage::disk('public')->download($path, $fileName);
     }
 
     abort(404, 'File not found.');

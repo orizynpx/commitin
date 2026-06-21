@@ -99,4 +99,95 @@ class VacancyApplicationTest extends TestCase
             ->call('apply')
             ->assertHasErrors(['file' => 'max']);
     }
+
+    public function test_student_can_apply_with_multiple_pdfs(): void
+    {
+        Storage::fake('public');
+
+        $student = User::factory()->create(['role' => 'student']);
+        
+        $event = Event::forceCreate([
+            'event_id' => (string) \Illuminate\Support\Str::ulid(),
+            'event_name' => 'Tech Summit 2026',
+            'description' => 'A tech summit event',
+            'event_date' => now()->addDays(10),
+            'is_official' => true,
+        ]);
+
+        $vacancy = Vacancy::forceCreate([
+            'vacancy_id' => (string) \Illuminate\Support\Str::ulid(),
+            'event_id' => $event->event_id,
+            'division' => 'Web Developer',
+            'vacancy_description' => 'Build websites',
+            'status' => 'OPEN',
+        ]);
+
+        $file1 = UploadedFile::fake()->create('resume.pdf', 500, 'application/pdf');
+        $file2 = UploadedFile::fake()->create('portfolio.pdf', 800, 'application/pdf');
+
+        $test = Livewire::actingAs($student)
+            ->test('pages::student.vacancy-detail', ['vacancy' => $vacancy])
+            ->set('files', [$file1, $file2])
+            ->call('apply');
+
+        $test->assertHasNoErrors()
+            ->assertSee('Lamaran Anda berhasil dikirim!');
+
+        $application = VacancyApplication::first();
+        $this->assertNotNull($application);
+        $this->assertCount(2, $application->attachments);
+
+        $attachment1 = $application->attachments[0];
+        $attachment2 = $application->attachments[1];
+
+        $this->assertEquals('resume.pdf', $attachment1->file_name);
+        $this->assertEquals('portfolio.pdf', $attachment2->file_name);
+
+        Storage::disk('public')->assertExists('applications/' . basename($attachment1->file_url));
+        Storage::disk('public')->assertExists('applications/' . basename($attachment2->file_url));
+
+        $response1 = $this->actingAs($student)->get(route('attachments.download', $attachment1));
+        $response1->assertStatus(200);
+
+        $response2 = $this->actingAs($student)->get(route('attachments.download', $attachment2));
+        $response2->assertStatus(200);
+    }
+
+    public function test_attachment_section_is_hidden_when_no_attachments(): void
+    {
+        $student = User::factory()->create(['role' => 'student']);
+        $orgUser = User::factory()->create(['role' => 'organization']);
+
+        $event = Event::forceCreate([
+            'event_id' => (string) \Illuminate\Support\Str::ulid(),
+            'event_name' => 'Tech Summit 2026',
+            'description' => 'A tech summit event',
+            'event_date' => now()->addDays(10),
+            'is_official' => true,
+        ]);
+        $event->organizers()->attach($orgUser->user_id, ['organizer_role' => 'owner']);
+
+        $vacancy = Vacancy::forceCreate([
+            'vacancy_id' => (string) \Illuminate\Support\Str::ulid(),
+            'event_id' => $event->event_id,
+            'division' => 'Web Developer',
+            'vacancy_description' => 'Build websites',
+            'status' => 'OPEN',
+        ]);
+
+        $application = VacancyApplication::create([
+            'user_id' => $student->user_id,
+            'vacancy_id' => $vacancy->vacancy_id,
+            'status' => 'pending',
+            'file_url' => '',
+        ]);
+
+        Livewire::actingAs($student)
+            ->test('pages::student.vacancy-detail', ['vacancy' => $vacancy])
+            ->assertDontSee('Dokumen Lamaran');
+
+        Livewire::actingAs($orgUser)
+            ->test('pages::organization.application-detail', ['application' => $application])
+            ->assertDontSee('Tautan Lampiran CV / Berkas Pendukung');
+    }
 }

@@ -21,7 +21,7 @@ new #[Layout('layouts.app')] class extends Component
             abort(403, 'Unauthorized.');
         }
 
-        $this->application = $application->loadMissing(['vacancy.event', 'user.studentProfile', 'user.skills', 'user.experiences']);
+        $this->application = $application->loadMissing(['vacancy.event', 'user.studentProfile', 'user.skills', 'user.experiences', 'attachments']);
 
         $this->status = $this->application->status;
         $this->interview_scheduled_at = $this->application->interview_scheduled_at ? $this->application->interview_scheduled_at->format('Y-m-d\TH:i') : '';
@@ -141,19 +141,20 @@ new #[Layout('layouts.app')] class extends Component
                 </div>
             </div>
 
-            @if(!empty($application->file_url))
-                <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6 flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-on-surface text-sm mb-1">Tautan Lampiran CV / Berkas Pendukung</h3>
-                        <p class="text-xs text-outline-variant">Buka berkas di tab baru untuk meninjau kualifikasi pelamar.</p>
-                    </div>
-                    <a 
-                        href="{{ route('applications.download', $application) }}" 
-                        target="_blank" 
-                        class="bg-primary hover:bg-primary-container text-white font-semibold text-xs px-4 py-2.5 rounded-lg transition-colors inline-flex items-center gap-1.5"
-                    >
-                        Buka Berkas <svg class="w-4 h-4 ml-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                    </a>
+            @if($application->attachments->isNotEmpty())
+                <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
+                    <h3 class="font-bold text-on-surface text-sm mb-1">Tautan Lampiran CV / Berkas Pendukung</h3>
+                    <p class="text-xs text-outline-variant mb-4">Unduh berkas untuk meninjau kualifikasi pelamar.</p>
+                    <ul class="space-y-1.5">
+                        @foreach($application->attachments as $attachment)
+                            <li>
+                                <a href="{{ route('attachments.download', $attachment) }}" target="_blank" class="text-xs text-primary hover:underline flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    {{ $attachment->file_name }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
         </div>

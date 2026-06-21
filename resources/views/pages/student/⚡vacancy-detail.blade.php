@@ -13,6 +13,7 @@ new #[Layout('layouts.app')] class extends Component
 
     public Vacancy $vacancy;
     public $file;
+    public $files = [];
     public bool $isOrganizer = false;
 
     public function mount(Vacancy $vacancy): void
@@ -31,9 +32,22 @@ new #[Layout('layouts.app')] class extends Component
             return;
         }
 
-        $this->validate([
-            'file' => 'required|file|mimes:pdf|max:10240',
-        ]);
+        if ($this->file) {
+            $this->validate([
+                'file' => 'file|mimes:pdf|max:10240',
+            ]);
+        }
+        if (!empty($this->files)) {
+            $this->validate([
+                'files' => 'array|min:1',
+                'files.*' => 'file|mimes:pdf|max:10240',
+            ]);
+        }
+        if (!$this->file && empty($this->files)) {
+            $this->validate([
+                'files' => 'required|array|min:1',
+            ]);
+        }
 
         $existing = VacancyApplication::where('user_id', auth()->id())
             ->where('vacancy_id', $this->vacancy->vacancy_id)
@@ -44,18 +58,39 @@ new #[Layout('layouts.app')] class extends Component
             return;
         }
 
-        $path = $this->file->store('applications', 'public');
-        $file_url = Storage::url($path);
-
-        VacancyApplication::create([
+        $application = VacancyApplication::create([
             'user_id' => auth()->id(),
             'vacancy_id' => $this->vacancy->vacancy_id,
             'status' => 'pending',
-            'file_url' => $file_url,
+            'file_url' => '',
         ]);
+
+        $toUpload = [];
+        if ($this->file) {
+            $toUpload[] = $this->file;
+        }
+        foreach ($this->files as $f) {
+            $toUpload[] = $f;
+        }
+
+        foreach ($toUpload as $uploadedFile) {
+            $path = $uploadedFile->store('applications', 'public');
+            $file_url = Storage::url($path);
+            $application->attachments()->create([
+                'file_url' => $file_url,
+                'file_name' => $uploadedFile->getClientOriginalName(),
+            ]);
+        }
+
+        if ($application->attachments()->exists()) {
+            $application->update([
+                'file_url' => $application->attachments()->first()->file_url,
+            ]);
+        }
 
         session()->flash('success', 'Lamaran Anda berhasil dikirim!');
         $this->file = null;
+        $this->files = [];
     }
 }; ?>
 
@@ -67,7 +102,8 @@ new #[Layout('layouts.app')] class extends Component
     </div>
 
     @php
-        $existingApp = App\Models\VacancyApplication::where('user_id', auth()->id())
+        $existingApp = App\Models\VacancyApplication::with('attachments')
+            ->where('user_id', auth()->id())
             ->where('vacancy_id', $vacancy->vacancy_id)
             ->first();
         $creator = $vacancy->event->organizers->firstWhere('pivot.organizer_role', 'creator') 
@@ -180,11 +216,19 @@ new #[Layout('layouts.app')] class extends Component
                             </div>
                         @endif
 
-                        @if(!empty($existingApp->file_url))
-                            <div class="text-center pt-2">
-                                <a href="{{ route('applications.download', $existingApp) }}" target="_blank" class="text-xs text-primary hover:underline">
-                                    Lihat Dokumen Lamaran Anda &nearr;
-                                </a>
+                        @if($existingApp->attachments->isNotEmpty())
+                            <div class="mt-4 pt-4 border-t border-surface-dim">
+                                <h4 class="text-xs font-semibold text-outline-variant uppercase mb-2">Dokumen Lamaran</h4>
+                                <ul class="space-y-1.5 text-left">
+                                    @foreach($existingApp->attachments as $attachment)
+                                        <li>
+                                            <a href="{{ route('attachments.download', $attachment) }}" target="_blank" class="text-xs text-primary hover:underline flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                {{ $attachment->file_name }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
                             </div>
                         @endif
                     </div>
@@ -209,17 +253,21 @@ new #[Layout('layouts.app')] class extends Component
                                 <label class="block text-xs font-semibold text-on-surface-variant mb-2">Unggah CV/Portofolio (PDF)</label>
                                 <input 
                                     type="file" 
-                                    wire:model="file" 
-                                    class="w-full border border-surface-dim rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('file') border-red-500 @enderror"
+                                    multiple
+                                    wire:model="files" 
+                                    class="w-full border border-surface-dim rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary @error('files') border-red-500 @enderror @error('files.*') border-red-500 @enderror"
                                 />
-                                <div wire:loading wire:target="file" class="text-xs text-blue-500 mt-1">
+                                <div wire:loading wire:target="files" class="text-xs text-blue-500 mt-1">
                                     Sedang mengunggah berkas...
                                 </div>
-                                @error('file')
+                                @error('files')
+                                    <span class="text-xs text-error block mt-1">{{ $message }}</span>
+                                @enderror
+                                @error('files.*')
                                     <span class="text-xs text-error block mt-1">{{ $message }}</span>
                                 @enderror
                                 <p class="text-[10px] text-outline-variant mt-1 leading-normal">
-                                    Unggah berkas resume/portfolio Anda dalam format PDF dengan ukuran maksimal 10MB.
+                                    Unggah berkas resume/portfolio Anda dalam format PDF dengan ukuran maksimal 10MB (bisa memilih lebih dari satu berkas).
                                 </p>
                             </div>
 
