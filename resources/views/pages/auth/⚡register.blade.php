@@ -15,16 +15,14 @@ new #[Layout('layouts.guest')] class extends Component
     public string $password = '';
     public string $password_confirmation = '';
     
-    // Student Profile fields
     public string $student_id = '';
     public string $faculty = '';
     public string $study_program = '';
 
-    /**
-     * Handle an incoming registration request.
-     */
     public function register(): void
     {
+        $this->email = strtolower(trim($this->email));
+
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
@@ -36,7 +34,6 @@ new #[Layout('layouts.guest')] class extends Component
 
         $validated['password'] = Hash::make($validated['password']);
 
-        // Create user
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -44,7 +41,6 @@ new #[Layout('layouts.guest')] class extends Component
             'role' => 'student',
         ]);
 
-        // Create student profile
         $user->studentProfile()->create([
             'student_id' => $validated['student_id'],
             'faculty' => $validated['faculty'],
@@ -60,55 +56,48 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <!-- Registration Type Tabs -->
-    <div class="flex border-b border-gray-200  mb-6">
+    <div class="flex border-b border-gray-200 mb-6">
         <a href="{{ route('register') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-indigo-500 text-primary dark:text-indigo-400" wire:navigate>
-            {{ __('Student Account') }}
+            Akun Mahasiswa
         </a>
-        <a href="{{ route('register.organization') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-transparent text-outline hover:text-on-surface  dark:hover:text-gray-300" wire:navigate>
-            {{ __('Organization Account') }}
+        <a href="{{ route('register.organization') }}" class="w-1/2 py-2 text-center font-semibold text-sm border-b-2 border-transparent text-outline hover:text-on-surface dark:hover:text-gray-300" wire:navigate>
+            Akun Organisasi
         </a>
     </div>
 
     <form wire:submit="register">
-        <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" value="Nama Lengkap" />
             <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
-        <!-- Email Address -->
         <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
+            <x-input-label for="email" value="Email" />
             <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <!-- Student ID -->
         <div class="mt-4">
-            <x-input-label for="student_id" :value="__('Student ID / NIM')" />
+            <x-input-label for="student_id" value="NIM / ID Mahasiswa" />
             <x-text-input wire:model="student_id" id="student_id" class="block mt-1 w-full" type="text" name="student_id" required />
             <x-input-error :messages="$errors->get('student_id')" class="mt-2" />
         </div>
 
-        <!-- Faculty -->
         <div class="mt-4">
-            <x-input-label for="faculty" :value="__('Faculty')" />
+            <x-input-label for="faculty" value="Fakultas" />
             <x-text-input wire:model="faculty" id="faculty" class="block mt-1 w-full" type="text" name="faculty" required />
             <x-input-error :messages="$errors->get('faculty')" class="mt-2" />
         </div>
 
-        <!-- Study Program -->
         <div class="mt-4">
-            <x-input-label for="study_program" :value="__('Study Program')" />
+            <x-input-label for="study_program" value="Program Studi" />
             <x-text-input wire:model="study_program" id="study_program" class="block mt-1 w-full" type="text" name="study_program" required />
             <x-input-error :messages="$errors->get('study_program')" class="mt-2" />
         </div>
 
-        <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+            <x-input-label for="password" value="Password" />
             <x-text-input wire:model="password" id="password" class="block mt-1 w-full"
                             type="password"
                             name="password"
@@ -116,9 +105,8 @@ new #[Layout('layouts.guest')] class extends Component
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Confirm Password -->
         <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+            <x-input-label for="password_confirmation" value="Konfirmasi Password" />
             <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full"
                             type="password"
                             name="password_confirmation" required autocomplete="new-password" />
@@ -126,12 +114,12 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-on-surface-variant  hover:text-on-surface  rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary " href="{{ route('login') }}" wire:navigate>
-                {{ __('Already registered?') }}
+            <a class="underline text-sm text-on-surface-variant hover:text-on-surface rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" href="{{ route('login') }}" wire:navigate>
+                Sudah terdaftar?
             </a>
 
             <x-primary-button class="ms-4">
-                {{ __('Register') }}
+                Daftar
             </x-primary-button>
         </div>
     </form>

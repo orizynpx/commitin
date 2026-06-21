@@ -3,24 +3,19 @@
 namespace Database\Seeders;
 
 use App\Models\Event;
-use App\Models\EventOrganizer;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class EventOrganizerSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $pkkmb = Event::query()->where('event_name', 'PKKMB 2028')->first();
         $games = Event::query()->where('event_name', 'Wasaka Games 2028')->first();
 
-        $hmti = User::query()->where('email', 'HMTI@example.com')->first();
-        $wg = User::query()->where('email', 'WG@example.com')->first();
+        $hmti = User::query()->where('email', 'hmti@example.com')->first();
+        $wg = User::query()->where('email', 'wg@example.com')->first();
 
         DB::table('event_organizers')->insert([
             [

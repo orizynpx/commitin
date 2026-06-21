@@ -12,12 +12,6 @@ Route::middleware('guest')->group(function () {
 
     Route::livewire('login', 'pages::auth.login')
         ->name('login');
-
-    Route::livewire('forgot-password', 'pages::auth.forgot-password')
-        ->name('password.request');
-
-    Route::livewire('reset-password/{token}', 'pages::auth.reset-password')
-        ->name('password.reset');
 });
 
 Route::middleware('auth')->group(function () {

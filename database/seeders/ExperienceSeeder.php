@@ -4,18 +4,14 @@ namespace Database\Seeders;
 
 use App\Models\Experience;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ExperienceSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $bumawati = User::query()->where('email', 'buma@example.com')->first();
-        $andi = User::query()->where('email', 'Andi@example.com')->first();
+        $andi = User::query()->where('email', 'andi@example.com')->first();
 
         Experience::create([
             'user_id' => $bumawati->user_id,

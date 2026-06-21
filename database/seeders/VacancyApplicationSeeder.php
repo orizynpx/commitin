@@ -5,18 +5,14 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Vacancy;
 use App\Models\VacancyApplication;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class VacancyApplicationSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $bumawati = User::query()->where('email', 'buma@example.com')->first();
-        $andi = User::query()->where('email', 'Andi@example.com')->first();
+        $andi = User::query()->where('email', 'andi@example.com')->first();
 
         $acara = Vacancy::query()->where('division', 'Acara')->first();
         $publikasi = Vacancy::query()->where('division', 'Publikasi')->first();

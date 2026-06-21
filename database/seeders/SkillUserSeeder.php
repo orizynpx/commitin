@@ -4,19 +4,15 @@ namespace Database\Seeders;
 
 use App\Models\Skill;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class SkillUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $bumawati = User::query()->where('email', 'buma@example.com')->first();
-        $andi = User::query()->where('email', 'Andi@example.com')->first();
+        $andi = User::query()->where('email', 'andi@example.com')->first();
 
         $leadership = Skill::query()->where('skill_name', 'Leadership')->first();
         $publicSpeaking = Skill::query()->where('skill_name', 'Public Speaking')->first();
