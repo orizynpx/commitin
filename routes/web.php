@@ -69,14 +69,10 @@ Route::middleware(['auth', 'role:student,organization'])->prefix('organizer')->n
 
 // Admin Route Group
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Modul 7: Moderasi Keahlian (Skill Tagging - Approve/Reject/Delete Tag)
     Route::livewire('skills', 'pages::admin.skills')->name('skills');
-
-    // Dasbor Statistik Admin & Tindakan Pemblokiran Akun
     Route::livewire('dashboard', 'pages::admin.dashboard')->name('dashboard');
-
-    // Modul 1: Verifikasi Akun Organisasi Mahasiswa (Ormawa)
     Route::livewire('verifications', 'pages::admin.verifications')->name('verifications');
+    Route::livewire('users', 'pages::admin.users')->name('users');
 });
 
 Route::get('applications/{application}/download', function (\App\Models\VacancyApplication $application) {
