@@ -48,6 +48,13 @@ new #[Layout('layouts.app')] class extends Component
         session()->flash('status', "Keahlian \"{$skill->skill_name}\" telah dihapus secara permanen!");
     }
 
+    public function approveSkill(string $id): void
+    {
+        $skill = Skill::findOrFail($id);
+        $skill->update(['status' => 'approved']);
+        session()->flash('status', "Keahlian \"{$skill->skill_name}\" telah disetujui!");
+    }
+
     public function startEdit(string $id): void
     {
         $skill = Skill::findOrFail($id);
@@ -215,20 +222,13 @@ new #[Layout('layouts.app')] class extends Component
                                     <td class="px-6 py-4 text-outline-variant whitespace-nowrap">{{ $skill->users_count }}</td>
                                     <td class="px-6 py-4 text-outline-variant whitespace-nowrap">{{ $skill->vacancies_count }}</td>
                                     <td class="px-6 py-4 text-outline-variant whitespace-nowrap">{{ $skill->updated_at->format('d M Y H:i') }}</td>
-                                    <td class="px-6 py-4 text-right whitespace-nowrap relative">
-                                        <div x-data="{ open: false }" class="relative inline-block text-left">
-                                            <button @click="open = !open" class="text-gray-500 hover:text-gray-700 focus:outline-none text-xl font-bold px-2">
-                                                &#8942;
-                                            </button>
-                                            <div x-show="open" @click.away="open = false" style="display: none;" class="absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-surface-container-lowest ring-1 ring-black ring-opacity-5 z-20 p-2 border border-surface-dim text-left">
-                                                <button wire:click="startEdit('{{ $skill->skill_id }}')" @click="open = false" class="block w-full text-left px-4 py-2 text-xs hover:bg-surface-container-low text-on-surface">
-                                                    Edit
-                                                </button>
-                                                <button onclick="confirm('Hapus keahlian ini secara permanen?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')" @click="open = false" class="block w-full text-left px-4 py-2 text-xs hover:bg-surface-container-low text-error">
-                                                    Hapus
-                                                </button>
-                                            </div>
-                                        </div>
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                                        <button type="button" wire:click="approveSkill('{{ $skill->skill_id }}')" class="text-xs font-semibold mr-2">
+                                            Setujui
+                                        </button>
+                                        <button type="button" onclick="confirm('Tolak dan hapus keahlian ini?') || event.stopImmediatePropagation()" wire:click="deleteSkill('{{ $skill->skill_id }}')" class="text-xs font-semibold">
+                                            Tolak
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach

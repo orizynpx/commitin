@@ -79,6 +79,10 @@ class AdminSkillsTest extends TestCase
         $component->call('sortBy', 'skill_name');
         $this->assertEquals('skill_name', $component->get('sortColumn'));
 
+        $component->call('approveSkill', $pendingSkill->skill_id);
+        $pendingSkill->refresh();
+        $this->assertEquals('approved', $pendingSkill->status);
+
         $component->call('deleteSkill', $pendingSkill->skill_id);
         $this->assertFalse(Skill::where('skill_id', $pendingSkill->skill_id)->exists());
     }
