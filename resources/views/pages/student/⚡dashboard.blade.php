@@ -120,7 +120,7 @@ new #[Layout('layouts.app')] class extends Component
             <strong class="text-2xl font-black text-on-surface">{{ $totalApplications }}</strong>
         </div>
         <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-4">
-            <span class="text-[10px] font-bold text-on-secondary-container uppercase mb-1 block">Pending</span>
+            <span class="text-[10px] font-bold text-on-secondary-container uppercase mb-1 block">Menunggu</span>
             <strong class="text-2xl font-black text-on-surface">{{ $appPending }}</strong>
         </div>
         <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-4">
@@ -179,7 +179,7 @@ new #[Layout('layouts.app')] class extends Component
                 <div class="p-6 border-b border-surface-dim">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
                         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        Rekomendasi Cerdas (Smart Match)
+                        Rekomendasi Cerdas
                     </h3>
                     <p class="text-xs text-outline-variant mt-1">Lowongan kepanitiaan yang paling cocok dengan keahlian Anda.</p>
                 </div>
@@ -194,7 +194,7 @@ new #[Layout('layouts.app')] class extends Component
                                         <div class="flex items-center gap-2 mb-1">
                                             <span class="text-[10px] font-bold uppercase tracking-wider text-outline-variant">{{ $vac->event->event_name }}</span>
                                             @if($vac->event->is_official)
-                                                <span class="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded flex items-center gap-0.5" title="Event Resmi Kampus"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> Official</span>
+                                                <span class="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded flex items-center gap-0.5" title="Event Resmi Kampus"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> Resmi</span>
                                             @endif
                                         </div>
                                         <h4 class="font-bold text-on-surface">{{ $vac->division }}</h4>
@@ -238,7 +238,7 @@ new #[Layout('layouts.app')] class extends Component
                                     </div>
                                     <div class="flex items-center gap-2 text-xs text-on-surface-variant">
                                         <svg class="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
-                                        <span class="uppercase font-semibold text-[10px] bg-surface-container px-1.5 py-0.5 rounded">{{ $ivApp->interview_format ?? 'TBA' }}</span>
+                                        <span class="uppercase font-semibold text-[10px] bg-surface-container px-1.5 py-0.5 rounded">{{ $ivApp->interview_format ?? 'Menyusul' }}</span>
                                     </div>
                                     @if($ivApp->interview_location)
                                         <div class="flex items-start gap-2 text-xs text-on-surface-variant mt-2 pt-2 border-t border-surface-dim">
@@ -257,7 +257,7 @@ new #[Layout('layouts.app')] class extends Component
                 <div class="p-6 border-b border-surface-dim">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
                         <svg class="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Log Evaluasi (Penolakan)
+                        Catatan Evaluasi (Penolakan)
                     </h3>
                 </div>
                 @if($rejectedLogs->isEmpty())
