@@ -13,9 +13,8 @@ new #[Layout('layouts.app')] class extends Component
     {
         $orgId = auth()->id();
         $user = auth()->user();
-        $profile = clone $user->organizationProfile;
+        $profile = $user->organizationProfile ? clone $user->organizationProfile : null;
 
-        // 1. My Events Pipeline & High-level Metrics
         $myEvents = Event::whereHas('organizers', function($q) use ($orgId) {
             $q->where('event_organizers.user_id', $orgId);
         })->with(['organizers', 'vacancies.applications.user'])->get();
@@ -82,12 +81,10 @@ new #[Layout('layouts.app')] class extends Component
             }
         }
 
-        // Sort upcoming interviews by date
         usort($upcomingInterviews, function($a, $b) {
             return strtotime($a['time']) - strtotime($b['time']);
         });
 
-        // Limit upcoming interviews to show only top 5
         $upcomingInterviews = array_slice($upcomingInterviews, 0, 5);
 
         return view('pages.organization.⚡dashboard', [
@@ -108,7 +105,6 @@ new #[Layout('layouts.app')] class extends Component
 }; ?>
 
 <div class="space-y-8 py-6">
-    <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ __('Dasbor Penyelenggara') }}</h1>
@@ -117,7 +113,7 @@ new #[Layout('layouts.app')] class extends Component
     </div>
 
     @php
-        $status = $profile->verification_status ?? 'pending';
+        $status = $profile ? ($profile->verification_status ?? 'pending') : 'verified';
     @endphp
 
     @if ($status === 'pending')
@@ -137,27 +133,29 @@ new #[Layout('layouts.app')] class extends Component
             <p class="text-on-surface-variant text-sm mb-6 max-w-lg mx-auto">Harap perbarui profil Anda dengan informasi yang valid, atau hubungi administrator.</p>
         </div>
     @else
-        <!-- Organization Profile & Trust Snapshot -->
         <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div class="flex items-center gap-4">
-                <div class="w-16 h-16 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-2xl font-bold shrink-0">
-                    {{ substr($user->name, 0, 1) }}
-                </div>
+                @if($user->avatar_url)
+                    <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-16 h-16 rounded-full object-cover shrink-0">
+                @else
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=2563eb&color=fff" alt="{{ $user->name }}" class="w-16 h-16 rounded-full shrink-0">
+                @endif
                 <div>
                     <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
                         {{ $user->name }}
                         <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                     </h2>
-                    <p class="text-sm text-on-surface-variant mt-1">Tingkat: <span class="font-semibold uppercase">{{ str_replace('_', ' ', $profile->organization_level) }}</span></p>
+                    @if($profile)
+                        <p class="text-sm text-on-surface-variant mt-1">Tingkat: <span class="font-semibold uppercase">{{ $profile->organization_level === 'study_program' ? 'Program Studi' : ($profile->organization_level === 'faculty' ? 'Fakultas' : ($profile->organization_level === 'university' ? 'Universitas' : str_replace('_', ' ', $profile->organization_level))) }}</span></p>
+                    @endif
                 </div>
             </div>
             <div class="text-left md:text-right">
                 <span class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase bg-surface-container text-primary border border-primary-fixed-dim mb-1">Terverifikasi</span>
-                <p class="text-xs text-outline-variant">Sejak {{ $profile->verified_at ? \Carbon\Carbon::parse($profile->verified_at)->format('d M Y') : 'N/A' }}</p>
+                <p class="text-xs text-outline-variant">Sejak {{ ($profile && $profile->verified_at) ? \Carbon\Carbon::parse($profile->verified_at)->format('d M Y') : 'N/A' }}</p>
             </div>
         </div>
 
-        <!-- High-Level Operational Metrics -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
                 <span class="text-xs font-bold text-outline-variant uppercase mb-2 block">Total Kegiatan</span>
@@ -173,7 +171,6 @@ new #[Layout('layouts.app')] class extends Component
             </div>
         </div>
 
-        <!-- Recruitment Funnel Widget -->
         <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
@@ -182,13 +179,13 @@ new #[Layout('layouts.app')] class extends Component
                 </h3>
                 @if($appPending > 0)
                     <span class="bg-error text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse shadow-sm">
-                        {{ $appPending }} Pending Action Required!
+                        {{ $appPending }} Perlu Ditinjau!
                     </span>
                 @endif
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-surface-container p-4 rounded-xl border border-surface-dim text-center relative overflow-hidden">
-                    <span class="text-xs font-semibold text-outline-variant uppercase mb-1 block">Tinjauan Awal (Pending)</span>
+                    <span class="text-xs font-semibold text-outline-variant uppercase mb-1 block">Pending</span>
                     <strong class="text-2xl text-on-surface">{{ $appPending }}</strong>
                 </div>
                 <div class="bg-surface-container p-4 rounded-xl border border-surface-dim text-center relative overflow-hidden">
@@ -196,24 +193,22 @@ new #[Layout('layouts.app')] class extends Component
                     <strong class="text-2xl text-on-surface">{{ $appInterviewing }}</strong>
                 </div>
                 <div class="bg-surface-container p-4 rounded-xl border border-surface-dim text-center relative overflow-hidden">
-                    <span class="text-xs font-semibold text-on-secondary-container uppercase mb-1 block">Diterima</span>
+                    <span class="text-xs font-semibold text-on-secondary-container uppercase mb-1 block text-emerald-600">Diterima</span>
                     <strong class="text-2xl text-on-surface">{{ $appAccepted }}</strong>
                 </div>
                 <div class="bg-surface-container p-4 rounded-xl border border-surface-dim text-center relative overflow-hidden">
-                    <span class="text-xs font-semibold text-error uppercase mb-1 block">Ditolak</span>
+                    <span class="text-xs font-semibold text-error uppercase mb-1 block text-red-600">Ditolak</span>
                     <strong class="text-2xl text-on-surface">{{ $appRejected }}</strong>
                 </div>
             </div>
         </div>
 
-        <!-- Middle Section: Pipeline & Interviews -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- My Events Pipeline -->
             <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim flex flex-col h-full overflow-hidden">
                 <div class="p-6 border-b border-surface-dim">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
                         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        Kegiatan Saya (Pipeline)
+                        Kegiatan Saya
                     </h3>
                 </div>
                 <div class="flex-1 overflow-auto">
@@ -230,7 +225,7 @@ new #[Layout('layouts.app')] class extends Component
                                         </span>
                                     </div>
                                     <div class="flex flex-wrap items-center gap-4 text-xs">
-                                        <span class="text-primary font-semibold uppercase bg-surface-container px-2 py-0.5 rounded">{{ $ev['role'] }}</span>
+                                        <span class="text-primary font-semibold uppercase bg-surface-container px-2 py-0.5 rounded">{{ $ev['role'] === 'creator' ? 'Pembuat' : ($ev['role'] === 'owner' ? 'Pemilik' : ($ev['role'] === 'manager' ? 'Manajer' : $ev['role'])) }}</span>
                                         <span class="text-outline-variant"><strong class="text-on-surface">{{ $ev['active_vacancies'] }}</strong> Lowongan Buka</span>
                                         <span class="text-outline-variant"><strong class="text-on-surface">{{ $ev['applicants'] }}</strong> Pelamar</span>
                                     </div>
@@ -241,10 +236,7 @@ new #[Layout('layouts.app')] class extends Component
                 </div>
             </div>
 
-            <!-- Upcoming Interviews & Collaborators -->
             <div class="flex flex-col gap-6">
-                
-                <!-- Upcoming Scheduled Interviews -->
                 <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim flex flex-col h-full overflow-hidden">
                     <div class="p-6 border-b border-surface-dim">
                         <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
@@ -281,7 +273,6 @@ new #[Layout('layouts.app')] class extends Component
                     </div>
                 </div>
 
-                <!-- Collaborators Snapshot -->
                 <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-6">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2 mb-4">
                         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -296,7 +287,7 @@ new #[Layout('layouts.app')] class extends Component
                                     <div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">{{ substr($collab['name'], 0, 1) }}</div>
                                     <div class="flex flex-col">
                                         <span class="text-xs font-bold text-on-surface leading-none">{{ $collab['name'] }}</span>
-                                        <span class="text-[9px] font-semibold text-outline-variant uppercase">{{ $collab['role'] }}</span>
+                                        <span class="text-[9px] font-semibold text-outline-variant uppercase">{{ $collab['role'] === 'creator' ? 'Pembuat' : ($collab['role'] === 'owner' ? 'Pemilik' : ($collab['role'] === 'manager' ? 'Manajer' : $collab['role'])) }}</span>
                                     </div>
                                 </div>
                             @endforeach
@@ -308,9 +299,7 @@ new #[Layout('layouts.app')] class extends Component
                         </div>
                     @endif
                 </div>
-
             </div>
         </div>
-
     @endif
 </div>

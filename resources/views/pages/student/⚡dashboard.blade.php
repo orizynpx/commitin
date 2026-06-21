@@ -11,7 +11,7 @@ new #[Layout('layouts.app')] class extends Component
     public function render()
     {
         $user = auth()->user();
-        $profile = clone $user->studentProfile;
+        $profile = $user->studentProfile ? clone $user->studentProfile : null;
         $userSkills = clone $user->skills;
         
         $applications = $user->applications()->with(['vacancy.event'])->orderByDesc('created_at')->get();
@@ -32,7 +32,6 @@ new #[Layout('layouts.app')] class extends Component
             return $app->status === 'rejected' && !empty($app->feedback);
         })->take(5);
 
-        // Smart Matching Algorithm
         $userSkillIds = $userSkills->pluck('skill_id')->toArray();
         $recommendedVacancies = collect();
 
@@ -72,7 +71,6 @@ new #[Layout('layouts.app')] class extends Component
 }; ?>
 
 <div class="space-y-8 py-6">
-    <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ __('Dasbor Pelamar') }}</h1>
@@ -80,7 +78,6 @@ new #[Layout('layouts.app')] class extends Component
         </div>
     </div>
 
-    <!-- Academic & Profile Snapshot -->
     <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim p-6">
         @if($user->blocked_at)
             <div class="mb-6 bg-error-container border border-error text-error rounded-xl p-4 shadow-sm flex items-start gap-3">
@@ -93,15 +90,17 @@ new #[Layout('layouts.app')] class extends Component
         @endif
 
         <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div class="w-20 h-20 rounded-full bg-primary text-white flex items-center justify-center text-3xl font-bold shrink-0 shadow-sm shadow-primary-fixed-dim">
-                {{ substr($user->name, 0, 1) }}
-            </div>
+            @if($user->avatar_url)
+                <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-20 h-20 rounded-full object-cover shrink-0 shadow-sm shadow-primary-fixed-dim">
+            @else
+                <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=2563eb&color=fff" alt="{{ $user->name }}" class="w-20 h-20 rounded-full shrink-0 shadow-sm shadow-primary-fixed-dim">
+            @endif
             <div class="flex-1">
                 <h2 class="text-2xl font-bold text-on-surface mb-1">{{ $user->name }}</h2>
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-on-surface-variant mb-3">
-                    <span class="flex items-center gap-1"><svg class="w-4 h-4 text-outline-variant" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg> {{ $profile->student_id ?? '-' }}</span>
-                    <span class="flex items-center gap-1"><svg class="w-4 h-4 text-outline-variant" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg> {{ $profile->faculty ?? '-' }}</span>
-                    <span class="flex items-center gap-1"><svg class="w-4 h-4 text-outline-variant" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> {{ $profile->study_program ?? '-' }}</span>
+                    <span class="flex items-center gap-1"><svg class="w-4 h-4 text-outline-variant" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg> {{ $profile?->student_id ?? '-' }}</span>
+                    <span class="flex items-center gap-1"><svg class="w-4 h-4 text-outline-variant" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg> {{ $profile?->faculty ?? '-' }}</span>
+                    <span class="flex items-center gap-1"><svg class="w-4 h-4 text-outline-variant" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> {{ $profile?->study_program ?? '-' }}</span>
                 </div>
                 <div class="flex flex-wrap gap-1.5">
                     @forelse($userSkills as $skill)
@@ -115,7 +114,6 @@ new #[Layout('layouts.app')] class extends Component
         </div>
     </div>
 
-    <!-- Recruitment Pipeline Summary -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-4">
             <span class="text-[10px] font-bold text-outline-variant uppercase mb-1 block">Total Diajukan</span>
@@ -140,11 +138,7 @@ new #[Layout('layouts.app')] class extends Component
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Left Column: Status Tracker & Recommended -->
         <div class="lg:col-span-2 flex flex-col gap-6">
-            
-            <!-- Active Application Status Tracker -->
             <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim overflow-hidden">
                 <div class="p-6 border-b border-surface-dim flex justify-between items-center">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
@@ -171,7 +165,7 @@ new #[Layout('layouts.app')] class extends Component
                                         {{ $app->status === 'interviewing' ? 'bg-surface-container text-primary border-primary-fixed-dim' : '' }}
                                         {{ $app->status === 'pending' ? 'bg-surface-container text-outline-variant border-surface-dim' : '' }}
                                     ">
-                                        {{ $app->status }}
+                                        {{ $app->status === 'accepted' ? 'Diterima' : ($app->status === 'rejected' ? 'Ditolak' : ($app->status === 'interviewing' ? 'Wawancara' : 'Menunggu')) }}
                                     </span>
                                     <a href="{{ route('vacancies.show', $app->vacancy_id) }}" class="text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">Detail <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></a>
                                 </div>
@@ -181,7 +175,6 @@ new #[Layout('layouts.app')] class extends Component
                 @endif
             </div>
 
-            <!-- Recommended Vacancies -->
             <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim overflow-hidden">
                 <div class="p-6 border-b border-surface-dim">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
@@ -218,13 +211,9 @@ new #[Layout('layouts.app')] class extends Component
                     </div>
                 @endif
             </div>
-
         </div>
 
-        <!-- Right Column: Interviews & Rejections -->
         <div class="flex flex-col gap-6">
-            
-            <!-- Upcoming Interviews Widget -->
             <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-primary-fixed-dim overflow-hidden">
                 <div class="p-6 border-b border-surface-dim">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
@@ -264,7 +253,6 @@ new #[Layout('layouts.app')] class extends Component
                 @endif
             </div>
 
-            <!-- Application Feedback & Rejection Logs -->
             <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-error-container overflow-hidden">
                 <div class="p-6 border-b border-surface-dim">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
@@ -286,7 +274,6 @@ new #[Layout('layouts.app')] class extends Component
                     </div>
                 @endif
             </div>
-
         </div>
     </div>
 </div>
