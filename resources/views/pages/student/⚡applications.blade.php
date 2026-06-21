@@ -52,7 +52,7 @@ new #[Layout('layouts.app')] class extends Component
                                 {{ $app->status === 'interviewing' ? 'bg-surface-container text-primary border border-primary-fixed-dim' : '' }}
                                 {{ $app->status === 'pending' ? 'bg-secondary-container text-on-secondary-container border border-secondary-container' : '' }}
                             ">
-                                {{ $app->status }}
+                                {{ $app->status === 'accepted' ? 'Diterima' : ($app->status === 'rejected' ? 'Ditolak' : ($app->status === 'interviewing' ? 'Wawancara' : 'Menunggu')) }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
