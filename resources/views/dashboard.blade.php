@@ -83,7 +83,7 @@
                     </p>
                     <div class="bg-amber-50 rounded-lg p-4 mb-8 text-left border border-amber-100">
                         <p class="text-xs text-amber-800 font-medium leading-relaxed">
-                            💡 Selama proses peninjauan ini, Anda dapat melengkapi deskripsi profil organisasi Anda, namun Anda belum diperkenankan menerbitkan kegiatan/event atau membuka lowongan kepanitiaan.
+                            Selama proses peninjauan ini, Anda dapat melengkapi deskripsi profil organisasi Anda, namun Anda belum diperkenankan menerbitkan kegiatan/event atau membuka lowongan kepanitiaan.
                         </p>
                     </div>
                     <div class="flex justify-center gap-3">
@@ -113,7 +113,7 @@
                     </p>
                     <div class="bg-red-50 rounded-lg p-4 mb-8 text-left border border-red-100">
                         <p class="text-xs text-red-800 font-medium leading-relaxed">
-                            ⚠️ Silakan perbarui deskripsi organisasi, tingkat organisasi, atau informasi lainnya di halaman profil Anda. Setelah Anda memperbarui profil, permohonan Anda akan otomatis dikirimkan kembali untuk ditinjau ulang oleh admin.
+                            Silakan perbarui deskripsi organisasi, tingkat organisasi, atau informasi lainnya di halaman profil Anda. Setelah Anda memperbarui profil, permohonan Anda akan otomatis dikirimkan kembali untuk ditinjau ulang oleh admin.
                         </p>
                     </div>
                     <div class="flex justify-center gap-3">
