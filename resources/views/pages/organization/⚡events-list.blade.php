@@ -74,7 +74,9 @@ new #[Layout('layouts.app')] class extends Component
                 @forelse($events as $event)
                     <tr>
                         <td class="px-6 py-4 font-semibold text-on-surface whitespace-nowrap">
-                            {{ $event->event_name }}
+                            <a href="{{ route('organizer.events.show', $event->event_id) }}" class="hover:underline text-primary">
+                                {{ $event->event_name }}
+                            </a>
                         </td>
                         <td class="px-6 py-4 text-outline-variant whitespace-nowrap">
                             {{ $event->event_date?->format('d M Y') ?? '-' }}

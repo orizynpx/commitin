@@ -217,7 +217,7 @@ new #[Layout('layouts.app')] class extends Component
                     @else
                         <div class="divide-y divide-surface-dim">
                             @foreach($eventList as $ev)
-                                <a href="{{ route('organizer.events.edit', $ev['id']) }}" class="block p-4 hover:bg-surface-container-low transition-colors group">
+                                <a href="{{ route('organizer.events.show', $ev['id']) }}" class="block p-4 hover:bg-surface-container-low transition-colors group">
                                     <div class="flex justify-between items-start mb-2">
                                         <h4 class="font-bold text-on-surface group-hover:text-primary transition-colors">{{ $ev['name'] }}</h4>
                                         <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border {{ $ev['is_past'] ? 'bg-surface-container text-outline-variant border-surface-dim' : 'bg-secondary-container text-on-secondary-container border-secondary-container' }}">

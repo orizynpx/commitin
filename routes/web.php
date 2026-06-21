@@ -46,11 +46,10 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
 Route::middleware(['auth', 'role:student,organization'])->prefix('organizer')->name('organizer.')->group(function () {
     Route::livewire('dashboard', 'pages::organization.dashboard')->name('dashboard');
 
-    // Events and vacancies RESTful paths requiring verification
     Route::middleware('verified_org')->group(function () {
-        // Events resource list & modification
         Route::livewire('events', 'pages::organization.events-list')->name('events.index');
         Route::livewire('events/create', 'pages::organization.create-event')->name('events.create');
+        Route::livewire('events/{event}', 'pages::organization.event-detail')->name('events.show');
         Route::livewire('events/{event}/edit', 'pages::organization.edit-event')->name('events.edit');
 
         // Vacancies nested under events
