@@ -20,6 +20,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 
     Route::livewire('profile', 'pages::profile')->name('profile');
+    Route::livewire('profile/edit', 'pages::profile-edit')->name('profile.edit');
 
     Route::middleware('role:student')->group(function () {
         Route::livewire('vacancies', 'pages::student.explore')->name('vacancies.index');

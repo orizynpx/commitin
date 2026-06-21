@@ -32,9 +32,7 @@ class UserProfileAvatarTest extends TestCase
         $avatarFile = UploadedFile::fake()->image('avatar.jpg');
 
         Livewire::actingAs($student)
-            ->test('pages::profile')
-            ->assertSet('isEditing', false)
-            ->set('isEditing', true)
+            ->test('pages::profile-edit')
             ->set('name', 'Updated Student Name')
             ->set('student_id', '54321')
             ->set('faculty', 'Updated Faculty')
@@ -44,8 +42,7 @@ class UserProfileAvatarTest extends TestCase
             ->set('avatarFile', $avatarFile)
             ->call('updateProfile')
             ->assertHasNoErrors()
-            ->assertSet('isEditing', false)
-            ->assertSee('Profil berhasil diperbarui!');
+            ->assertRedirect(route('profile'));
 
         $student->refresh();
         $this->assertEquals('Updated Student Name', $student->name);
@@ -75,17 +72,14 @@ class UserProfileAvatarTest extends TestCase
         $avatarFile = UploadedFile::fake()->image('avatar.png');
 
         Livewire::actingAs($org)
-            ->test('pages::profile')
-            ->assertSet('isEditing', false)
-            ->set('isEditing', true)
+            ->test('pages::profile-edit')
             ->set('name', 'Updated Org Name')
             ->set('organization_level', 'university')
             ->set('description', 'Updated Desc')
             ->set('avatarFile', $avatarFile)
             ->call('updateProfile')
             ->assertHasNoErrors()
-            ->assertSet('isEditing', false)
-            ->assertSee('Profil berhasil diperbarui!');
+            ->assertRedirect(route('profile'));
 
         $org->refresh();
         $this->assertEquals('Updated Org Name', $org->name);
@@ -113,8 +107,7 @@ class UserProfileAvatarTest extends TestCase
         $invalidFile = UploadedFile::fake()->create('document.txt', 500, 'text/plain');
 
         Livewire::actingAs($student)
-            ->test('pages::profile')
-            ->set('isEditing', true)
+            ->test('pages::profile-edit')
             ->set('name', 'Name')
             ->set('avatarFile', $invalidFile)
             ->call('updateProfile')
@@ -124,8 +117,7 @@ class UserProfileAvatarTest extends TestCase
         $largeFile = UploadedFile::fake()->create('huge.png', 6000, 'image/png');
 
         Livewire::actingAs($student)
-            ->test('pages::profile')
-            ->set('isEditing', true)
+            ->test('pages::profile-edit')
             ->set('name', 'Name')
             ->set('avatarFile', $largeFile)
             ->call('updateProfile')
