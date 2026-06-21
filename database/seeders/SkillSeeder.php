@@ -48,5 +48,35 @@ class SkillSeeder extends Seeder
             'skill_name' => 'Project Management',
             'status' => 'approved',
         ]);
+
+        Skill::create([
+            'skill_name' => 'Golang',
+            'status' => 'pending',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Svelte',
+            'status' => 'pending',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Docker',
+            'status' => 'pending',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Public Relations',
+            'status' => 'pending',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Spamming',
+            'status' => 'rejected',
+        ]);
+
+        Skill::create([
+            'skill_name' => 'Gaming Core',
+            'status' => 'rejected',
+        ]);
     }
 }
