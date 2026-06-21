@@ -10,7 +10,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'name' => 'System Admin',
+            'name' => 'Administrator',
             'email' => env('ADMIN_EMAIL', 'admin@example.com'),
             'password' => env('ADMIN_PASSWORD', 'admin123'),
             'role' => 'admin',
