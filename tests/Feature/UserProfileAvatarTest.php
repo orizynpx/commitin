@@ -123,4 +123,23 @@ class UserProfileAvatarTest extends TestCase
             ->call('updateProfile')
             ->assertHasErrors(['avatarFile' => 'max']);
     }
+
+    public function test_admin_can_view_and_edit_profile(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'name' => 'Original Admin']);
+
+        Livewire::actingAs($admin)
+            ->test('pages::profile')
+            ->assertSee('Original Admin');
+
+        Livewire::actingAs($admin)
+            ->test('pages::profile-edit')
+            ->set('name', 'Updated Admin Name')
+            ->call('updateProfile')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('profile'));
+
+        $admin->refresh();
+        $this->assertEquals('Updated Admin Name', $admin->name);
+    }
 }

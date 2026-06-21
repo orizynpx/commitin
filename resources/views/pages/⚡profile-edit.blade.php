@@ -29,9 +29,6 @@ new #[Layout('layouts.app')] class extends Component
     public function mount(): void
     {
         $user = Auth::user();
-        if ($user->role === 'admin') {
-            abort(403, 'Administrator tidak memiliki halaman profil.');
-        }
 
         $this->role = $user->role;
         $this->name = $user->name;
@@ -123,6 +120,23 @@ new #[Layout('layouts.app')] class extends Component
                     'verification_status' => $newStatus,
                 ]
             );
+        } else {
+            $rules = [
+                'name' => ['required', 'string', 'max:255'],
+            ];
+
+            if ($this->avatarFile) {
+                $rules['avatarFile'] = ['image', 'max:5120'];
+            }
+
+            $validated = $this->validate($rules);
+
+            $updateData = ['name' => $validated['name']];
+            if ($this->avatarFile) {
+                $path = $this->avatarFile->store('avatars', 'public');
+                $updateData['avatar_url'] = Storage::url($path);
+            }
+            $user->update($updateData);
         }
 
         session()->flash('status', 'Profil berhasil diperbarui!');
