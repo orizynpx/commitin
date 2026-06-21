@@ -16,8 +16,10 @@ class ApplicationDownloadTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_owner_can_download_mock_url_placeholder(): void
+    public function test_owner_can_download_real_upload(): void
     {
+        Storage::fake('public');
+
         $student = User::factory()->create(['role' => 'student']);
         
         $event = Event::forceCreate([
@@ -36,19 +38,21 @@ class ApplicationDownloadTest extends TestCase
             'status' => 'OPEN',
         ]);
         
+        $file = UploadedFile::fake()->create('my-resume.pdf', 500, 'application/pdf');
+        $path = $file->store('applications', 'public');
+        $fileUrl = Storage::url($path);
+
         $application = VacancyApplication::create([
             'user_id' => $student->user_id,
             'vacancy_id' => $vacancy->vacancy_id,
             'status' => 'pending',
-            'file_url' => 'https://example.com/cv-placeholder.pdf',
+            'file_url' => $fileUrl,
         ]);
 
         $response = $this->actingAs($student)->get(route('applications.download', $application));
 
         $response->assertStatus(200);
-        $response->assertHeader('Content-Type', 'application/pdf');
-        $response->assertHeader('Content-Disposition', 'attachment; filename="cv-placeholder.pdf"');
-        $this->assertStringContainsString('Mock CV Placeholder PDF', $response->getContent());
+        Storage::disk('public')->assertExists($path);
     }
 
     public function test_organizer_can_download_real_upload(): void
@@ -66,7 +70,6 @@ class ApplicationDownloadTest extends TestCase
             'is_official' => true,
         ]);
 
-        // Attach organizer
         $event->organizers()->attach($orgUser->user_id, ['organizer_role' => 'owner']);
 
         $vacancy = Vacancy::forceCreate([
@@ -129,6 +132,8 @@ class ApplicationDownloadTest extends TestCase
 
     public function test_admin_can_download_any_application(): void
     {
+        Storage::fake('public');
+
         $student = User::factory()->create(['role' => 'student']);
         $admin = User::factory()->create(['role' => 'admin']);
         
@@ -148,16 +153,20 @@ class ApplicationDownloadTest extends TestCase
             'status' => 'OPEN',
         ]);
         
+        $file = UploadedFile::fake()->create('my-resume.pdf', 500, 'application/pdf');
+        $path = $file->store('applications', 'public');
+        $fileUrl = Storage::url($path);
+
         $application = VacancyApplication::create([
             'user_id' => $student->user_id,
             'vacancy_id' => $vacancy->vacancy_id,
             'status' => 'pending',
-            'file_url' => 'https://example.com/cv-placeholder.pdf',
+            'file_url' => $fileUrl,
         ]);
 
         $response = $this->actingAs($admin)->get(route('applications.download', $application));
 
         $response->assertStatus(200);
-        $response->assertHeader('Content-Type', 'application/pdf');
+        Storage::disk('public')->assertExists($path);
     }
 }

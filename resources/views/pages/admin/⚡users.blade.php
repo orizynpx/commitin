@@ -181,14 +181,20 @@ new #[Layout('layouts.app')] class extends Component
                                                 <button @click="open = !open" class="text-gray-500 hover:text-gray-700 focus:outline-none text-xl font-bold px-2">
                                                     &#8942;
                                                 </button>
-                                                <div x-show="open" @click.away="open = false" style="display: none;" class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-surface-container-lowest ring-1 ring-black ring-opacity-5 z-20 p-4 border border-surface-dim text-left">
-                                                    <form wire:submit.prevent="blockUser('{{ $u->user_id }}')" class="space-y-2">
-                                                        <label class="block text-xs font-semibold text-on-surface mb-1">Alasan Pemblokiran:</label>
-                                                        <input type="text" wire:model="blockReasons.{{ $u->user_id }}" placeholder="Tulis alasan..." class="w-full text-xs border border-surface-dim rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-error bg-surface-container-lowest text-on-surface" />
-                                                        @error('blockReasons.'.$u->user_id) <span class="text-[10px] text-error block">{{ $message }}</span> @enderror
-                                                        <button type="submit" class="w-full text-center text-xs font-semibold bg-error text-white py-1 rounded hover:bg-error-container hover:text-error transition-colors">
-                                                            {{ __('Blokir Pengguna') }}
-                                                        </button>
+                                                <div x-show="open" @click.away="open = false" style="display: none;" class="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-surface-container-lowest ring-1 ring-black ring-opacity-5 z-20 p-4 border border-surface-dim text-left">
+                                                    <form wire:submit.prevent="blockUser('{{ $u->user_id }}')" class="block w-full space-y-3">
+                                                        <div class="block w-full">
+                                                            <label class="block text-xs font-semibold text-on-surface mb-1">Alasan Pemblokiran:</label>
+                                                            <input type="text" wire:model="blockReasons.{{ $u->user_id }}" placeholder="Tulis alasan..." class="block w-full text-xs border border-surface-dim rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-error bg-surface-container-lowest text-on-surface" />
+                                                            @error('blockReasons.'.$u->user_id) 
+                                                                <span class="text-[10px] text-error block mt-1">{{ $message }}</span> 
+                                                            @enderror
+                                                        </div>
+                                                        <div class="block w-full">
+                                                            <button type="submit" class="block w-full text-center text-xs font-semibold bg-error text-white py-1.5 rounded hover:bg-error-container hover:text-error transition-colors">
+                                                                {{ __('Blokir Pengguna') }}
+                                                            </button>
+                                                        </div>
                                                     </form>
                                                 </div>
                                             </div>

@@ -8,7 +8,6 @@ new #[Layout('layouts.app')] class extends Component
 {
     public VacancyApplication $application;
     
-    // Evaluation form fields
     public string $status = '';
     public string $interview_scheduled_at = '';
     public string $interview_format = 'online';
@@ -81,7 +80,6 @@ new #[Layout('layouts.app')] class extends Component
     @endif
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <!-- Applicant Profile (Left Col) -->
         <div class="md:col-span-2 space-y-6">
             <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
                 <span class="text-xs font-semibold uppercase tracking-wider text-outline-variant mb-1 block">
@@ -90,7 +88,6 @@ new #[Layout('layouts.app')] class extends Component
                 <h1 class="text-3xl font-bold text-on-surface mb-2">{{ $application->user->name }}</h1>
                 <p class="text-sm text-outline-variant mb-6">{{ $application->user->email }}</p>
 
-                <!-- Academic Info -->
                 @if($application->user->studentProfile)
                     <div class="grid grid-cols-2 gap-4 pb-6 mb-6 border-b border-surface-dim text-sm">
                         <div>
@@ -116,7 +113,6 @@ new #[Layout('layouts.app')] class extends Component
                     </div>
                 @endif
 
-                <!-- Candidate Skills -->
                 <div class="mb-6">
                     <h3 class="text-sm font-semibold text-outline-variant uppercase mb-3">Keahlian Mahasiswa</h3>
                     <div class="flex flex-wrap gap-2">
@@ -130,7 +126,6 @@ new #[Layout('layouts.app')] class extends Component
                     </div>
                 </div>
 
-                <!-- Experiences -->
                 <div>
                     <h3 class="text-sm font-semibold text-outline-variant uppercase mb-3">Riwayat Pengalaman</h3>
                     <div class="space-y-3">
@@ -146,23 +141,23 @@ new #[Layout('layouts.app')] class extends Component
                 </div>
             </div>
 
-            <!-- CV / Attachment View -->
-            <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6 flex items-center justify-between">
-                <div>
-                    <h3 class="font-bold text-on-surface text-sm mb-1">Tautan Lampiran CV / Berkas Pendukung</h3>
-                    <p class="text-xs text-outline-variant">Buka berkas di tab baru untuk meninjau kualifikasi pelamar.</p>
+            @if(!empty($application->file_url))
+                <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-on-surface text-sm mb-1">Tautan Lampiran CV / Berkas Pendukung</h3>
+                        <p class="text-xs text-outline-variant">Buka berkas di tab baru untuk meninjau kualifikasi pelamar.</p>
+                    </div>
+                    <a 
+                        href="{{ route('applications.download', $application) }}" 
+                        target="_blank" 
+                        class="bg-primary hover:bg-primary-container text-white font-semibold text-xs px-4 py-2.5 rounded-lg transition-colors inline-flex items-center gap-1.5"
+                    >
+                        Buka Berkas <svg class="w-4 h-4 ml-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </a>
                 </div>
-                <a 
-                    href="{{ route('applications.download', $application) }}" 
-                    target="_blank" 
-                    class="bg-primary hover:bg-primary-container text-white font-semibold text-xs px-4 py-2.5 rounded-lg transition-colors inline-flex items-center gap-1.5"
-                >
-                    Buka Berkas <svg class="w-4 h-4 ml-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </a>
-            </div>
+            @endif
         </div>
 
-        <!-- Evaluation Form (Right Col) -->
         <div>
             <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6 sticky top-6">
                 <h3 class="text-lg font-bold text-on-surface mb-4">Formulir Evaluasi</h3>
