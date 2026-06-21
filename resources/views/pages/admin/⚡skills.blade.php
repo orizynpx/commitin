@@ -9,17 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 new #[Layout('layouts.app')] class extends Component
 {
-    // Tabs state
-    public string $activeTab = 'pending'; // pending, approved, rejected
+    public string $activeTab = 'pending';
 
-    // Add skill form
     public string $newSkillName = '';
 
-    // Edit skill form
     public ?string $editingSkillId = null;
     public string $editingSkillName = '';
 
-    // Merge skills form
     public ?string $mergeSourceId = null;
     public ?string $mergeTargetId = null;
     public bool $showMergePanel = false;
@@ -105,7 +101,6 @@ new #[Layout('layouts.app')] class extends Component
             $source = Skill::findOrFail($validated['mergeSourceId']);
             $target = Skill::findOrFail($validated['mergeTargetId']);
 
-            // Merge users possessing the source skill
             $sourceUsers = $source->users()->pluck('users.user_id')->toArray();
             foreach ($sourceUsers as $userId) {
                 if (!$target->users()->where('users.user_id', $userId)->exists()) {
@@ -114,7 +109,6 @@ new #[Layout('layouts.app')] class extends Component
             }
             $source->users()->detach();
 
-            // Merge vacancies requiring the source skill
             $sourceVacancies = $source->vacancies()->pluck('vacancies.vacancy_id')->toArray();
             foreach ($sourceVacancies as $vacancyId) {
                 if (!$target->vacancies()->where('vacancies.vacancy_id', $vacancyId)->exists()) {
@@ -137,7 +131,6 @@ new #[Layout('layouts.app')] class extends Component
 @section('title', 'Moderasi Keahlian')
 
 <div class="space-y-8 py-6">
-    <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ __('Moderasi Keahlian') }}</h1>
@@ -149,7 +142,6 @@ new #[Layout('layouts.app')] class extends Component
         </button>
     </div>
 
-    <!-- Alert Status -->
     @if (session('status'))
         <div class="bg-secondary-container border border-surface-dim text-on-secondary-container rounded-xl p-4 text-sm flex items-center gap-2 shadow-sm">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +158,6 @@ new #[Layout('layouts.app')] class extends Component
         $allSkills = Skill::orderBy('skill_name')->get();
     @endphp
 
-    <!-- MERGE SKILLS PANEL -->
     @if ($showMergePanel)
         <div class="bg-surface-container-lowest border border-surface-dim rounded-2xl p-6 shadow-sm">
             <h3 class="text-lg font-bold text-on-surface mb-2">Gabungkan Keahlian</h3>
@@ -177,7 +168,7 @@ new #[Layout('layouts.app')] class extends Component
                     <select wire:model="mergeSourceId" required class="w-full border border-surface-dim rounded-xl px-4 py-2.5 text-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary">
                         <option value="">-- Pilih Keahlian Sumber --</option>
                         @foreach ($allSkills as $s)
-                            <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status }})</option>
+                            <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status === 'approved' ? 'Disetujui' : ($s->status === 'pending' ? 'Tertunda' : 'Ditolak') }})</option>
                         @endforeach
                     </select>
                     @error('mergeSourceId') <span class="text-xs text-error mt-1 block">{{ $message }}</span> @enderror
@@ -188,7 +179,7 @@ new #[Layout('layouts.app')] class extends Component
                     <select wire:model="mergeTargetId" required class="w-full border border-surface-dim rounded-xl px-4 py-2.5 text-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary">
                         <option value="">-- Pilih Keahlian Target --</option>
                         @foreach ($allSkills as $s)
-                            <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status }})</option>
+                            <option value="{{ $s->skill_id }}">{{ $s->skill_name }} ({{ $s->status === 'approved' ? 'Disetujui' : ($s->status === 'pending' ? 'Tertunda' : 'Ditolak') }})</option>
                         @endforeach
                     </select>
                     @error('mergeTargetId') <span class="text-xs text-error mt-1 block">{{ $message }}</span> @enderror
@@ -202,7 +193,6 @@ new #[Layout('layouts.app')] class extends Component
         </div>
     @endif
 
-    <!-- EDIT SKILL PANEL -->
     @if ($editingSkillId)
         <div class="bg-surface-container-lowest border border-surface-dim rounded-2xl p-6 shadow-sm">
             <h3 class="text-lg font-bold text-on-surface mb-4">Ubah Nama Keahlian</h3>
@@ -221,7 +211,6 @@ new #[Layout('layouts.app')] class extends Component
         </div>
     @endif
 
-    <!-- Manual Add Skill Section -->
     <div class="bg-surface-container-lowest border border-surface-dim rounded-2xl p-6 shadow-sm">
         <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -236,7 +225,6 @@ new #[Layout('layouts.app')] class extends Component
         </form>
     </div>
 
-    <!-- Tabs switcher -->
     <div class="flex gap-2 border-b border-surface-dim overflow-x-auto">
         <button wire:click="$set('activeTab', 'pending')" class="px-4 py-3 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'pending' ? 'border-primary text-primary' : 'border-transparent text-outline-variant hover:text-on-surface hover:border-surface-dim' }}">
             Perlu Persetujuan <span class="bg-surface-container px-2 py-0.5 rounded-full text-xs">{{ $pendingSkills->count() }}</span>
@@ -249,7 +237,6 @@ new #[Layout('layouts.app')] class extends Component
         </button>
     </div>
 
-    <!-- Lists Body -->
     <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-dim overflow-hidden">
         @if ($activeTab === 'pending')
             @if ($pendingSkills->isEmpty())

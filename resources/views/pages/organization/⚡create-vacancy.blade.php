@@ -14,6 +14,7 @@ new #[Layout('layouts.app')] class extends Component
     public string $vacancy_description = '';
     public string $status = 'OPEN';
     public array $selectedSkills = [];
+    public string $suggestedSkillName = '';
 
     public function mount(Event $event): void
     {
@@ -49,6 +50,30 @@ new #[Layout('layouts.app')] class extends Component
         session()->flash('success', 'Lowongan divisi berhasil dibuka.');
         return redirect()->route('organizer.events.index');
     }
+
+    public function openSuggestSkillModal(): void
+    {
+        $this->suggestedSkillName = '';
+        $this->dispatch('open-modal', 'suggest-skill-modal');
+    }
+
+    public function suggestSkill(): void
+    {
+        $validated = $this->validate([
+            'suggestedSkillName' => ['required', 'string', 'max:50', 'unique:skills,skill_name'],
+        ], [
+            'suggestedSkillName.unique' => 'Keahlian ini sudah terdaftar.',
+        ]);
+
+        Skill::create([
+            'skill_name' => trim($validated['suggestedSkillName']),
+            'status' => 'pending',
+        ]);
+
+        $this->dispatch('close-modal', 'suggest-skill-modal');
+        $this->suggestedSkillName = '';
+        session()->flash('success', 'Usulan keahlian baru berhasil diajukan dan menunggu persetujuan admin!');
+    }
 }; ?>
 
 <div class="max-w-2xl mx-auto py-8">
@@ -57,6 +82,12 @@ new #[Layout('layouts.app')] class extends Component
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Kembali ke Daftar Event
         </a>
     </div>
+
+    @if (session('success'))
+        <div class="mb-4 p-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
+            <span class="font-medium">{{ session('success') }}</span>
+        </div>
+    @endif
 
     <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
         <span class="text-xs font-semibold uppercase tracking-wider text-primary mb-1 block">
@@ -108,7 +139,7 @@ new #[Layout('layouts.app')] class extends Component
             <div>
                 <label class="block text-sm font-semibold text-on-surface-variant mb-2">Keahlian Yang Disyaratkan</label>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-surface-dim rounded-lg p-4 bg-surface-container-low">
-                    @foreach(App\Models\Skill::all() as $skill)
+                    @foreach(App\Models\Skill::where('status', 'approved')->get() as $skill)
                         <label class="inline-flex items-center text-sm text-on-surface-variant">
                             <input 
                                 type="checkbox" 
@@ -120,6 +151,7 @@ new #[Layout('layouts.app')] class extends Component
                         </label>
                     @endforeach
                 </div>
+                <button type="button" wire:click="openSuggestSkillModal" class="text-xs text-primary hover:underline mt-2 block">Usulkan Keahlian Baru</button>
                 @error('selectedSkills')
                     <span class="text-xs text-error block mt-1">{{ $message }}</span>
                 @enderror
@@ -141,4 +173,28 @@ new #[Layout('layouts.app')] class extends Component
             </div>
         </form>
     </div>
+
+    <x-modal name="suggest-skill-modal">
+        <form wire:submit.prevent="suggestSkill" class="p-6">
+            <h2 class="text-lg font-medium text-on-surface dark:text-gray-100">
+                Usulkan Keahlian Baru
+            </h2>
+
+            <div class="mt-4">
+                <x-input-label for="suggested_skill_name" :value="__('Nama Keahlian')" />
+                <x-text-input wire:model="suggestedSkillName" id="suggested_skill_name" placeholder="Misal: Python" class="block mt-1 w-full" type="text" required />
+                <x-input-error :messages="$errors->get('suggestedSkillName')" class="mt-2" />
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <x-secondary-button x-on:click="$dispatch('close-modal', 'suggest-skill-modal')">
+                    {{ __('Batal') }}
+                </x-secondary-button>
+
+                <x-primary-button>
+                    {{ __('Usulkan') }}
+                </x-primary-button>
+            </div>
+        </form>
+    </x-modal>
 </div>

@@ -13,34 +13,29 @@ new #[Layout('layouts.app')] class extends Component
 {
     use WithFileUploads;
 
-    // Common User properties
     public string $name = '';
     public string $email = '';
     public string $role = '';
     public bool $isEditing = false;
 
-    // Avatar upload property
     public $avatarFile;
 
-    // Student Profile properties
     public string $student_id = '';
     public string $faculty = '';
     public string $study_program = '';
     public ?int $entry_year = null;
     public ?string $bio = '';
 
-    // Organization Profile properties
     public string $organization_level = 'study_program';
     public ?string $description = '';
     public string $verification_status = 'pending';
 
-    // Experience CRUD Form fields
     public ?string $experienceId = null;
     public string $experienceTitle = '';
     public string $experienceDescription = '';
 
-    // Skill Form fields
     public string $skillInput = '';
+    public string $suggestedSkillName = '';
 
     public function mount(): void
     {
@@ -70,6 +65,13 @@ new #[Layout('layouts.app')] class extends Component
                 $this->verification_status = $profile->verification_status;
             }
         }
+    }
+
+    public function render()
+    {
+        return view('pages.⚡profile', [
+            'approvedSkills' => Skill::where('status', 'approved')->get(),
+        ]);
     }
 
     public function updateProfile(): void
@@ -150,7 +152,6 @@ new #[Layout('layouts.app')] class extends Component
         session()->flash('status', 'Profil berhasil diperbarui!');
     }
 
-    // Experience CRUD
     public function loadExperience(?string $id = null): void
     {
         if ($id) {
@@ -207,7 +208,6 @@ new #[Layout('layouts.app')] class extends Component
         session()->flash('status', 'Pengalaman berhasil dihapus!');
     }
 
-    // Skills Management
     public function addSkill(): void
     {
         $validated = $this->validate([
@@ -219,8 +219,12 @@ new #[Layout('layouts.app')] class extends Component
             return;
         }
 
-        // Find or create skill
-        $skill = Skill::firstOrCreate(['skill_name' => $skillName]);
+        $skill = Skill::where('skill_name', $skillName)->where('status', 'approved')->first();
+
+        if (!$skill) {
+            session()->flash('error', 'Keahlian tidak ditemukan atau belum disetujui. Silakan gunakan tombol Usulkan Keahlian Baru.');
+            return;
+        }
 
         $user = Auth::user();
         if (!$user->skills()->where('skills.skill_id', $skill->skill_id)->exists()) {
@@ -236,14 +240,43 @@ new #[Layout('layouts.app')] class extends Component
         Auth::user()->skills()->detach($skillId);
         session()->flash('status', 'Keahlian berhasil dihapus!');
     }
+
+    public function openSuggestSkillModal(): void
+    {
+        $this->suggestedSkillName = '';
+        $this->dispatch('open-modal', 'suggest-skill-modal');
+    }
+
+    public function suggestSkill(): void
+    {
+        $validated = $this->validate([
+            'suggestedSkillName' => ['required', 'string', 'max:50', 'unique:skills,skill_name'],
+        ], [
+            'suggestedSkillName.unique' => 'Keahlian ini sudah terdaftar.',
+        ]);
+
+        Skill::create([
+            'skill_name' => trim($validated['suggestedSkillName']),
+            'status' => 'pending',
+        ]);
+
+        $this->dispatch('close-modal', 'suggest-skill-modal');
+        $this->suggestedSkillName = '';
+        session()->flash('status', 'Usulan keahlian baru berhasil diajukan dan menunggu persetujuan admin!');
+    }
 }
 ?>
 
 <div>
-    <!-- Status Toast Alert -->
     @if (session('status'))
         <div class="mb-4 p-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
             <span class="font-medium">{{ session('status') }}</span>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-4 p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+            <span class="font-medium">{{ session('error') }}</span>
         </div>
     @endif
 
@@ -335,18 +368,13 @@ new #[Layout('layouts.app')] class extends Component
             </div>
         </div>
     @else
-        <!-- View Profile Screen -->
-        <!-- Header / Hero Section -->
         <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim overflow-hidden mb-8">
-            <!-- Cover Image -->
             <div class="h-48 bg-primary w-full relative">
                 <div class="absolute inset-0 bg-black/10"></div>
             </div>
             
-            <!-- Profile Info -->
             <div class="px-8 pb-8 relative">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end -mt-16 mb-4 gap-4">
-                    <!-- Avatar & Name -->
                     <div class="flex flex-col md:flex-row items-start md:items-end gap-6">
                         <div class="w-32 h-32 rounded-full border-4 border-white bg-surface-container-lowest overflow-hidden shadow-md shrink-0 relative z-10">
                             @if(Auth::user()->avatar_url)
@@ -369,7 +397,7 @@ new #[Layout('layouts.app')] class extends Component
                                     </span>
                                 </div>
                             @elseif ($role === 'organization')
-                                <p class="text-lg text-primary font-medium mb-1">{{ __('Tingkat Ormawa: ') }} {{ ucfirst(str_replace('_', ' ', $organization_level)) }}</p>
+                                <p class="text-lg text-primary font-medium mb-1">{{ __('Tingkat Ormawa: ') }} {{ $organization_level === 'study_program' ? 'Program Studi' : ($organization_level === 'faculty' ? 'Fakultas' : ($organization_level === 'university' ? 'Universitas' : str_replace('_', ' ', $organization_level))) }}</p>
                                 <div class="flex items-center text-sm text-outline gap-4">
                                     @if ($verification_status === 'verified')
                                         <span class="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
@@ -386,13 +414,10 @@ new #[Layout('layouts.app')] class extends Component
                                         </span>
                                     @endif
                                 </div>
-                            @elseif ($role === 'admin')
-                                <p class="text-lg text-primary font-medium mb-1">Administrator Platform</p>
                             @endif
                         </div>
                     </div>
                     
-                    <!-- Actions -->
                     <div class="flex gap-3 w-full md:w-auto">
                         @if ($role !== 'admin')
                             <button wire:click="$set('isEditing', true)" class="flex-1 md:flex-none bg-primary text-white hover:bg-primary-container px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-primary-fixed-dim flex items-center justify-center gap-2">
@@ -405,12 +430,9 @@ new #[Layout('layouts.app')] class extends Component
             </div>
         </div>
 
-        <!-- Main Content Body -->
         @if ($role === 'student')
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                <!-- Left/Main Column -->
                 <div class="lg:col-span-2 space-y-8">
-                    <!-- About Section -->
                     <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-8">
                         <h3 class="text-xl font-bold text-on-surface mb-4 flex items-center gap-2">
                             <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -421,7 +443,6 @@ new #[Layout('layouts.app')] class extends Component
                         </p>
                     </div>
 
-                    <!-- Experience Timeline -->
                     <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-8">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-xl font-bold text-on-surface flex items-center gap-2">
@@ -454,18 +475,22 @@ new #[Layout('layouts.app')] class extends Component
                     </div>
                 </div>
                 
-                <!-- Right Sidebar Column -->
                 <div class="space-y-8">
-                    <!-- Skills Section -->
                     <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-6">
                         <h3 class="text-lg font-bold text-on-surface flex items-center gap-2 mb-4">
                             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                             Keahlian Saya
                         </h3>
 
-                        <!-- Add Skill Form inline -->
+                        <button type="button" wire:click="openSuggestSkillModal" class="text-xs text-primary hover:underline mb-4 block">Usulkan Keahlian Baru</button>
+
                         <form wire:submit.prevent="addSkill" class="mb-4 flex gap-2">
-                            <x-text-input wire:model="skillInput" placeholder="Tambah keahlian (misal: Figma)..." class="flex-1 text-sm px-3 py-1.5" />
+                            <input list="skills-datalist" wire:model="skillInput" placeholder="Tambah keahlian (misal: Figma)..." class="flex-1 text-sm px-3 py-1.5 border border-surface-dim rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-surface-container-lowest" />
+                            <datalist id="skills-datalist">
+                                @foreach($approvedSkills as $s)
+                                    <option value="{{ $s->skill_name }}"></option>
+                                @endforeach
+                            </datalist>
                             <button type="submit" class="bg-primary text-white hover:bg-primary-container px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors">
                                 {{ __('Tambah') }}
                             </button>
@@ -488,7 +513,6 @@ new #[Layout('layouts.app')] class extends Component
             </div>
         @elseif ($role === 'organization')
             <div class="space-y-8 mb-8">
-                <!-- About Section for Organizations -->
                 <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-8">
                     <h3 class="text-xl font-bold text-on-surface mb-4 flex items-center gap-2">
                         <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
@@ -497,18 +521,19 @@ new #[Layout('layouts.app')] class extends Component
                     <p class="text-on-surface-variant leading-relaxed text-sm whitespace-pre-line">
                         {{ $description ?: 'Belum ada deskripsi organisasi. Silakan klik tombol Edit Profil untuk menambahkannya.' }}
                     </p>
+                    <div class="mt-6 pt-6 border-t border-surface-dim">
+                        <button type="button" wire:click="openSuggestSkillModal" class="bg-surface-container border border-surface-dim hover:bg-surface-dim text-on-surface-variant text-xs font-bold px-4 py-2 rounded-lg transition-colors">Usulkan Keahlian Baru</button>
+                    </div>
                 </div>
-            </div>
-        @elseif ($role === 'admin')
-            <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-8 mb-8">
-                <h3 class="text-xl font-bold text-on-surface mb-2">Informasi Administrator</h3>
-                <p class="text-on-surface-variant text-sm">Nama Akun: {{ $name }}</p>
-                <p class="text-on-surface-variant text-sm">Email: {{ $email }}</p>
-                <p class="text-outline text-xs mt-4">Anda masuk dengan peran Admin. Anda dapat menavigasi menu di bilah samping untuk melakukan verifikasi akun ormawa.</p>
             </div>
         @endif
 
-        <!-- EXPERIENCE MODAL -->
+        @if ($role !== 'admin')
+            <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-8 mb-8">
+                <livewire:profile.⚡update-password-form />
+            </div>
+        @endif
+
         <x-modal name="experience-modal">
             <form wire:submit.prevent="saveExperience" class="p-6">
                 <h2 class="text-lg font-medium text-on-surface dark:text-gray-100">
@@ -534,6 +559,30 @@ new #[Layout('layouts.app')] class extends Component
 
                     <x-primary-button>
                         {{ __('Simpan') }}
+                    </x-primary-button>
+                </div>
+            </form>
+        </x-modal>
+
+        <x-modal name="suggest-skill-modal">
+            <form wire:submit.prevent="suggestSkill" class="p-6">
+                <h2 class="text-lg font-medium text-on-surface dark:text-gray-100">
+                    Usulkan Keahlian Baru
+                </h2>
+
+                <div class="mt-4">
+                    <x-input-label for="suggested_skill_name" :value="__('Nama Keahlian')" />
+                    <x-text-input wire:model="suggestedSkillName" id="suggested_skill_name" placeholder="Misal: Python" class="block mt-1 w-full" type="text" required />
+                    <x-input-error :messages="$errors->get('suggestedSkillName')" class="mt-2" />
+                </div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <x-secondary-button x-on:click="$dispatch('close-modal', 'suggest-skill-modal')">
+                        {{ __('Batal') }}
+                    </x-secondary-button>
+
+                    <x-primary-button>
+                        {{ __('Usulkan') }}
                     </x-primary-button>
                 </div>
             </form>

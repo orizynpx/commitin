@@ -16,7 +16,7 @@ new #[Layout('layouts.app')] class extends Component
 
     public function mount(Vacancy $vacancy): void
     {
-        $this->vacancy = $vacancy->loadMissing(['event', 'skills']);
+        $this->vacancy = $vacancy->loadMissing(['event.organizers', 'skills']);
     }
 
     public function apply()
@@ -25,7 +25,6 @@ new #[Layout('layouts.app')] class extends Component
             'file' => 'required|file|mimes:pdf|max:10240',
         ]);
 
-        // Check if already applied
         $existing = VacancyApplication::where('user_id', auth()->id())
             ->where('vacancy_id', $this->vacancy->vacancy_id)
             ->first();
@@ -35,7 +34,6 @@ new #[Layout('layouts.app')] class extends Component
             return;
         }
 
-        // Store the uploaded file to the local public disk (storage/app/public/applications)
         $path = $this->file->store('applications', 'public');
         $file_url = Storage::url($path);
 
@@ -62,14 +60,17 @@ new #[Layout('layouts.app')] class extends Component
         $existingApp = App\Models\VacancyApplication::where('user_id', auth()->id())
             ->where('vacancy_id', $vacancy->vacancy_id)
             ->first();
+        $creator = $vacancy->event->organizers->firstWhere('pivot.organizer_role', 'creator') 
+                ?? $vacancy->event->organizers->firstWhere('pivot.organizer_role', 'owner') 
+                ?? $vacancy->event->organizers->first();
+        $creatorName = $creator ? $creator->name : 'N/A';
     @endphp
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <!-- Details Column -->
         <div class="md:col-span-2 space-y-6">
             <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-dim p-6">
                 <span class="text-xs font-semibold uppercase tracking-wider text-primary mb-1 block">
-                    {{ $vacancy->event->event_name }}
+                    {{ $vacancy->event->event_name }} (Penyelenggara: {{ $creatorName }})
                 </span>
                 <h1 class="text-3xl font-bold text-on-surface mb-4">{{ $vacancy->division }}</h1>
                 
@@ -109,7 +110,6 @@ new #[Layout('layouts.app')] class extends Component
             </div>
         </div>
 
-        <!-- Application Form Column -->
         <div>
             @if(session()->has('success'))
                 <div class="bg-secondary-container border border-secondary-container text-on-secondary-container rounded-xl p-4 mb-6 text-sm">
@@ -135,7 +135,7 @@ new #[Layout('layouts.app')] class extends Component
                                 {{ $existingApp->status === 'interviewing' ? 'bg-primary-container text-on-primary-container' : '' }}
                                 {{ $existingApp->status === 'pending' ? 'bg-amber-100 text-on-secondary-container' : '' }}
                             ">
-                                {{ $existingApp->status }}
+                                {{ $existingApp->status === 'accepted' ? 'Diterima' : ($existingApp->status === 'rejected' ? 'Ditolak' : ($existingApp->status === 'interviewing' ? 'Wawancara' : 'Menunggu')) }}
                             </span>
                         </div>
 
@@ -148,7 +148,7 @@ new #[Layout('layouts.app')] class extends Component
                                 </div>
                                 <div>
                                     <span class="text-outline-variant block">Format:</span>
-                                    <strong>{{ ucfirst($existingApp->interview_format ?? '-') }}</strong>
+                                    <strong>{{ $existingApp->interview_format === 'online' ? 'Online' : ($existingApp->interview_format === 'offline' ? 'Offline' : $existingApp->interview_format ?? '-') }}</strong>
                                 </div>
                                 <div>
                                     <span class="text-outline-variant block">Lokasi / Link:</span>

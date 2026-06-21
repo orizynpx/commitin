@@ -14,7 +14,7 @@ new #[Layout('layouts.app')] class extends Component
     {
         $userSkills = auth()->user()->skills->pluck('skill_id')->toArray();
 
-        $query = Vacancy::with(['event', 'skills'])
+        $query = Vacancy::with(['event.organizers', 'skills'])
             ->where('status', 'OPEN');
 
         if (!empty($this->search)) {
@@ -38,17 +38,15 @@ new #[Layout('layouts.app')] class extends Component
             $totalReq = count($reqSkills);
             $vacancy->match_count = $matched;
             $vacancy->total_req_skills = $totalReq;
-            // Highlight if student has all or most (>= 50%) of required skills
             $vacancy->is_recommended = ($totalReq > 0 && ($matched / $totalReq) >= 0.5);
             return $vacancy;
         });
 
-        // Sort recommended first
         $vacancies = $vacancies->sortByDesc('is_recommended');
 
         return view('pages.student.⚡explore', [
             'vacancies' => $vacancies,
-            'skills' => Skill::all(),
+            'skills' => Skill::where('status', 'approved')->get(),
         ]);
     }
 }; ?>
@@ -59,7 +57,6 @@ new #[Layout('layouts.app')] class extends Component
         <p class="text-on-surface-variant">{{ __('Cari dan temukan lowongan panitia yang sesuai dengan keahlian Anda.') }}</p>
     </div>
 
-    <!-- Search & Filter Controls -->
     <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-6 mb-8 flex flex-col md:flex-row gap-4">
         <div class="flex-1">
             <label class="block text-xs font-semibold text-outline-variant uppercase mb-2">Cari Divisi atau Kegiatan</label>
@@ -84,19 +81,23 @@ new #[Layout('layouts.app')] class extends Component
         </div>
     </div>
 
-    <!-- Vacancies Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         @forelse($vacancies as $vacancy)
+            @php
+                $creator = $vacancy->event->organizers->firstWhere('pivot.organizer_role', 'creator') 
+                        ?? $vacancy->event->organizers->firstWhere('pivot.organizer_role', 'owner') 
+                        ?? $vacancy->event->organizers->first();
+                $creatorName = $creator ? $creator->name : 'N/A';
+            @endphp
             <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-surface-dim p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative">
 
                 <div>
                     <span class="text-xs font-semibold uppercase tracking-wider text-primary mb-1 block">
-                        {{ $vacancy->event->event_name }}
+                        {{ $vacancy->event->event_name }} (Penyelenggara: {{ $creatorName }})
                     </span>
                     <h3 class="text-xl font-bold text-on-surface mb-2">{{ $vacancy->division }}</h3>
                     <p class="text-on-surface-variant text-sm mb-4 line-clamp-3">{{ $vacancy->vacancy_description }}</p>
 
-                    <!-- Required Skills -->
                     <div class="mb-6">
                         <span class="block text-xs font-semibold text-outline-variant uppercase mb-2">Keahlian Dibutuhkan:</span>
                         <div class="flex flex-wrap gap-1.5">
