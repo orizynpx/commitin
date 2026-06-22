@@ -2,11 +2,22 @@
 
 echo "Starting Azure App Service Custom Startup Script..."
 
-# Copy custom Nginx configuration to defaults
+# Copy custom Nginx configuration to all potential defaults
 if [ -f /home/site/wwwroot/.azure/nginx.conf ]; then
     echo "Applying custom Nginx configuration..."
+    
+    # Try copying to all common Nginx default locations
     cp /home/site/wwwroot/.azure/nginx.conf /etc/nginx/sites-available/default
-    service nginx reload
+    cp /home/site/wwwroot/.azure/nginx.conf /etc/nginx/sites-enabled/default
+    cp /home/site/wwwroot/.azure/nginx.conf /etc/nginx/conf.d/default.conf
+    
+    # Test Nginx configuration
+    echo "Testing Nginx configuration..."
+    nginx -t
+    
+    # Reload Nginx using multiple methods to ensure it works across container versions
+    echo "Reloading Nginx..."
+    nginx -s reload || service nginx reload || service nginx restart
 else
     echo "WARNING: Custom Nginx configuration not found at /home/site/wwwroot/.azure/nginx.conf"
 fi
