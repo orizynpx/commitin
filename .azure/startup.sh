@@ -2,28 +2,33 @@
 
 echo "Starting Azure App Service Custom Startup Script..."
 
-# Copy custom Nginx configuration to defaults
+# Copy custom Nginx configuration to defaults (run in background to bypass default script overwriting)
 if [ -f /home/site/wwwroot/.azure/nginx.conf ]; then
-    echo "Applying custom Nginx configuration..."
-    
-    # Remove the duplicate file in conf.d to prevent double-loading conflict
-    rm -f /etc/nginx/conf.d/default.conf
-    
-    # Overwrite default site config
-    cp /home/site/wwwroot/.azure/nginx.conf /etc/nginx/sites-available/default
-    
-    # Ensure it is symlinked to sites-enabled
-    if [ ! -L /etc/nginx/sites-enabled/default ]; then
-        ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-    fi
-    
-    # Test Nginx configuration
-    echo "Testing Nginx configuration..."
-    nginx -t
-    
-    # Reload Nginx using multiple methods to ensure it works across container versions
-    echo "Reloading Nginx..."
-    nginx -s reload || service nginx reload || service nginx restart
+    (
+        echo "Background task: Waiting for web server to start before copying Nginx configuration..."
+        sleep 15
+        echo "Background task: Applying custom Nginx configuration..."
+        
+        # Remove the duplicate file in conf.d to prevent double-loading conflict
+        rm -f /etc/nginx/conf.d/default.conf
+        
+        # Overwrite default site config
+        cp /home/site/wwwroot/.azure/nginx.conf /etc/nginx/sites-available/default
+        
+        # Ensure it is symlinked to sites-enabled
+        if [ ! -L /etc/nginx/sites-enabled/default ]; then
+            ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+        fi
+        
+        # Test Nginx configuration
+        echo "Background task: Testing Nginx configuration..."
+        nginx -t
+        
+        # Reload Nginx
+        echo "Background task: Reloading Nginx..."
+        nginx -s reload
+        echo "Background task: Nginx reloaded successfully!"
+    ) &
 else
     echo "WARNING: Custom Nginx configuration not found at /home/site/wwwroot/.azure/nginx.conf"
 fi
