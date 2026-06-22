@@ -2,14 +2,20 @@
 
 echo "Starting Azure App Service Custom Startup Script..."
 
-# Copy custom Nginx configuration to all potential defaults
+# Copy custom Nginx configuration to defaults
 if [ -f /home/site/wwwroot/.azure/nginx.conf ]; then
     echo "Applying custom Nginx configuration..."
     
-    # Try copying to all common Nginx default locations
+    # Remove the duplicate file in conf.d to prevent double-loading conflict
+    rm -f /etc/nginx/conf.d/default.conf
+    
+    # Overwrite default site config
     cp /home/site/wwwroot/.azure/nginx.conf /etc/nginx/sites-available/default
-    cp /home/site/wwwroot/.azure/nginx.conf /etc/nginx/sites-enabled/default
-    cp /home/site/wwwroot/.azure/nginx.conf /etc/nginx/conf.d/default.conf
+    
+    # Ensure it is symlinked to sites-enabled
+    if [ ! -L /etc/nginx/sites-enabled/default ]; then
+        ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+    fi
     
     # Test Nginx configuration
     echo "Testing Nginx configuration..."
