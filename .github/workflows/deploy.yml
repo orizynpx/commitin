@@ -1,0 +1,54 @@
+name: Deploy Laravel App to Azure Web App
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: mbstring, xml, ctype, iconv, mysql, sqlite, pdo_sqlite, pdo_mysql, bcmath, zip
+        coverage: none
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Composer Dependencies
+      run: |
+        composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+    - name: Install NPM Dependencies & Build Assets
+      run: |
+        npm install
+        npm run build
+
+    - name: Prepare Deployment Artifacts
+      run: |
+        # Remove node_modules as they are not needed in production running assets
+        rm -rf node_modules
+        # Clean up log files from development
+        rm -f storage/logs/*.log
+        # Ensure standard folder layout exists in package
+        mkdir -p storage/framework/cache/data
+        mkdir -p storage/framework/sessions
+        mkdir -p storage/framework/views
+        mkdir -p storage/logs
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: .
