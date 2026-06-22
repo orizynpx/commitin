@@ -33,16 +33,22 @@ new class extends Component {
 
         $existing = Skill::where('skill_name', $name)->first();
         if ($existing) {
-            $this->selectSkill($existing->skill_id);
+            if ($existing->status === 'approved') {
+                $this->selectSkill($existing->skill_id);
+            } else {
+                session()->flash('status', 'Keahlian ini sudah diusulkan sebelumnya dan sedang menunggu persetujuan.');
+            }
+            $this->search = '';
             return;
         }
 
-        $skill = Skill::create([
+        Skill::create([
             'skill_name' => $name,
             'status' => 'pending',
         ]);
 
-        $this->selectSkill($skill->skill_id);
+        session()->flash('status', 'Keahlian baru berhasil diusulkan dan menunggu persetujuan admin.');
+        $this->search = '';
     }
 }; ?>
 
@@ -78,7 +84,9 @@ new class extends Component {
                     ->whereNotIn('skill_id', $selectedIds)
                     ->limit(10)
                     ->get();
-                $exactMatch = \App\Models\Skill::where('skill_name', trim($search))->exists();
+                $exactApprovedMatch = \App\Models\Skill::where('status', 'approved')
+                    ->where('skill_name', trim($search))
+                    ->exists();
             @endphp
 
             <div x-show="open" style="display: none;" class="absolute left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-surface-container-lowest border border-surface-dim rounded-lg shadow-lg z-50 divide-y divide-surface-dim">
@@ -93,7 +101,7 @@ new class extends Component {
                     </button>
                 @endforeach
 
-                @if($allowSuggest && !$exactMatch)
+                @if($allowSuggest && !$exactApprovedMatch)
                     <button 
                         type="button" 
                         wire:click="suggestSkill" 
